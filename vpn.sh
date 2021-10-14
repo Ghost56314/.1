@@ -1055,7 +1055,8 @@ function newinstall(){
     	tls-cipher $CC_CIPHER
     	ignore-unknown-option block-outside-dns
     	setenv opt block-outside-dns # Prevent Windows 10 DNS leak
-    	verb 3" >>/etc/openvpn/client-template.txt
+    	verb 3
+	auth-user-pass" >>/etc/openvpn/client-template.txt
     	
     		if [[ $COMPRESSION_ENABLED == "y" ]]; then
     			echo "compress $COMPRESSION_ALG" >>/etc/openvpn/client-template.txt
@@ -1464,10 +1465,6 @@ function radiusConfig(){
 	plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
-
-	sed -i -e '$auth-user-pass'   /etc/openvpn/client-template.txt
-
-#eof
 }
 
 function edit(){
@@ -1481,7 +1478,7 @@ function edit(){
         read ans
         if [ "$ans" = "y" ]
         then
-		  clear
+          clear
           read -rp "Please Enter IBSng IP Address:" IPBS
           read -rp "Please Enter SecurePass" secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
