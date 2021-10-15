@@ -1369,8 +1369,7 @@ function radiusConfig(){
 	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
 	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
-	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG	  securepass   $securepass" /etc/radiusclient/radiusclient.conf
-#sudo sed -i -r "/.*acctserver.*/a securepass   $securepass" /etc/radiusclient/radiusclient.conf
+	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1383,7 +1382,22 @@ function radiusConfig(){
 	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
-
+	  		  echo "
+	server
+	{
+		# The UDP port for radius accounting.
+		acctport=1813
+		# The UDP port for radius authentication.
+		authport=1812
+		# The name or ip address of the radius server.
+		name=$IPBS
+		# How many times should the plugin send the if there is no response?
+		retry=1
+		# How long should the plugin wait for a response?
+		wait=1
+		# The shared secret.
+		sharedsecret=$secpass
+	}" >> /usr/lib/openvpn/radiusplugin.cnf
 
         else
           f=1
@@ -1476,7 +1490,7 @@ function edit(){
           read -rp "Please Enter IBSng IP Address:" IPBS
           read -rp "Please Enter SecurePass" secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
+          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 		  echo "
 	server
 	{
@@ -1491,7 +1505,7 @@ function edit(){
 		# How long should the plugin wait for a response?
 		wait=1
 		# The shared secret.
-		sharedsecret=testpw
+		sharedsecret=$secpass
 	}" >> /usr/lib/openvpn/radiusplugin.cnf
 
 
