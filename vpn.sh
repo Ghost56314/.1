@@ -1376,8 +1376,8 @@ function radiusConfig(){
         read ans
         if [ "$ans" = "y" ]
         then
-          read -rp "Please Enter IPIBSNG: " IPBS
-          read -rp "Please Enter securepass: " secpass
+          read -rp "Please Enter IBSng IP Address: " IPBS
+          read -rp "Please Enter SecurePass: " secpass
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
 
@@ -1459,8 +1459,8 @@ function radiusConfig(){
 }
 
 function edit(){
-	sudo cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
-	sudo clear  
+	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
+	clear  
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
@@ -1498,19 +1498,22 @@ function edit(){
 	done
 }
 clear
-echo "1: First install?"
-echo "2: Edit installation?"
-echo "3: Exit"
+echo "1) First install OpenVPN Server With IBSng Config"
+echo "2) Install Cisco Any Connect Server With IBSng Config"
+echo "3) Install L2TP Server With IBSng Config"
+echo "4) Install PPTP Server With IBSng Config"
+echo "5) Edit IBSng Configuration"
+echo "6: Exit"
 read -rp "Select an number:" Selection
-if [ $Selection -gt 3 ]
+if [ $Selection -gt 6 ]
 then
-  echo "The variable is greater than 3."
+  echo "The variable is greater than 6."
   :
 elif [ $Selection -eq 1 ]
 then
   newinstall
   #radiusConfig
-elif [ $Selection -eq 2 ]
+elif [ $Selection -eq 5 ]
 then
   edit
 else
