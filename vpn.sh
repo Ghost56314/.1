@@ -1479,8 +1479,8 @@ function edit(){
         if [ "$ans" = "y" ]
         then
           clear
-          read -rp "Please Enter IBSng IP Address:" IPBS
-          read -rp "Please Enter SecurePass" secpass
+    	  read -rp "Please Enter IBSng IP Address: " -e IPBS
+          read -rp "Please Enter SecurePass" -e secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 		  echo "
