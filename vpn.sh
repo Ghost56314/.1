@@ -1381,8 +1381,7 @@ function radiusConfig(){
 	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
-			  echo "
-	server
+	echo "server
 	{
 		acctport=1813
 		authport=1812
@@ -1390,8 +1389,7 @@ function radiusConfig(){
 		retry=1
 		wait=1
 		sharedsecret=$secpass
-	}" >> /usr/lib/openvpn/radiusplugin.cnf
-
+	}" | sudo tee /usr/lib/openvpn/radiusplugin.cnf
         else
           f=1
         fi
