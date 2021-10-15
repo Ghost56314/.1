@@ -1506,10 +1506,11 @@ function edit(){
 			fi
 	done
 }
+clear
 echo "1: First install?"
 echo "2: Edit installation?"
 echo "3: Exit"
-read -rp "Select an number" Selection
+read -rp "Select an number:" Selection
 if [ $Selection -gt 3 ]
 then
   echo "The variable is greater than 3."
