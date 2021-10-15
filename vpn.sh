@@ -1,4 +1,4 @@
-function newinstall(){
+function installopenvpn(){
        	#!/bin/bash
     	# shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
     	
@@ -1498,6 +1498,15 @@ function edit(){
 			fi
 	done
 }
+function installocs(){
+echo "ok"
+}
+function installl2tp(){
+echo "ok"
+}
+function installpptp(){
+echo "ok"
+}
 clear
 echo "1) First install OpenVPN Server With IBSng Config"
 echo "2) Install Cisco Any Connect Server With IBSng Config"
@@ -1512,7 +1521,7 @@ then
   :
 elif [ $Selection -eq 1 ]
 then
-  newinstall
+  installopenvpn
 elif [ $Selection -eq 2 ]
 then
   installocs
