@@ -1366,6 +1366,8 @@ function radiusConfig(){
 	read IPIBSNG
 	echo Please Enter SecurePass:
 	read securepass
+	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
+	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
 	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG	  securepass   $securepass" /etc/radiusclient/radiusclient.conf
 #sudo sed -i -r "/.*acctserver.*/a securepass   $securepass" /etc/radiusclient/radiusclient.conf
@@ -1378,6 +1380,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
+	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
 
@@ -1460,7 +1463,7 @@ function radiusConfig(){
 
 function edit(){
 	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
-	clear  
+	clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
@@ -1512,7 +1515,15 @@ then
 elif [ $Selection -eq 1 ]
 then
   newinstall
-  #radiusConfig
+elif [ $Selection -eq 2 ]
+then
+  installocs
+elif [ $Selection -eq 3 ]
+then
+  installl2tp
+elif [ $Selection -eq 4 ]
+then
+  installpptp
 elif [ $Selection -eq 5 ]
 then
   edit
