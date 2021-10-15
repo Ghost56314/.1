@@ -4,14 +4,7 @@ function newinstall(){
     	
     	# Secure OpenVPN server installer for Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux.
     	# https://github.com/angristan/openvpn-install
-    	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
-    	sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-    	sudo unzip master.zip
-    	sudo mv freeradius-client-master freeradius-client
-    	cd freeradius-client
-    	./configure --prefix=/
-    	sudo make && sudo make install
-    	
+  
     	function isRoot() {
     		if [ "$EUID" -ne 0 ]; then
     			return 1
@@ -1369,14 +1362,12 @@ function radiusConfig(){
 	sudo make && sudo make install
 	sudo apt install openvpn-auth-radius -y
 	sudo clear
-	echo Please Enter IPIBSNG:
-	
-
+	echo Please Enter IBSng IP Address:
 	read IPIBSNG
-	echo Please Enter securepass:
+	echo Please Enter SecurePass:
 	read securepass
-	sudo sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
-	sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG	  securepass   $securepass" /etc/radiusclient/radiusclient.conf
+	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
+	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG	  securepass   $securepass" /etc/radiusclient/radiusclient.conf
 #sudo sed -i -r "/.*acctserver.*/a securepass   $securepass" /etc/radiusclient/radiusclient.conf
 	f=0
 	while [ $f -eq 0 ]
@@ -1387,8 +1378,8 @@ function radiusConfig(){
         then
           read -rp "Please Enter IPIBSNG: " IPBS
           read -rp "Please Enter securepass: " secpass
-          sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
 
 
         else
