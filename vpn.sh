@@ -1473,7 +1473,7 @@ function edit(){
         then
           clear
     	  read -rp "Please Enter IBSng IP Address: " -e IPBS
-          read -rp "Please Enter SecurePass" -e secpass
+          read -rp "Please Enter SecurePass: " -e secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
 		  echo "
