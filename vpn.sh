@@ -1499,13 +1499,17 @@ function edit(){
 	done
 }
 function installocs(){
-echo "ok"
+apt update ; apt install ocserv
+
 }
 function installl2tp(){
 echo "ok"
 }
 function installpptp(){
-echo "ok"
+apt update ; apt install pptpd build-essential libgcrypt20-dev -y
+echo "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee /etc/pptpd.conf
+echo "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee /etc/ppp/pptpd-options
+service pptpd restart
 }
 clear
 echo "1) First install OpenVPN Server With IBSng Config"
