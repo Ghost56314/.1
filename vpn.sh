@@ -1499,7 +1499,9 @@ function edit(){
 	done
 }
 function installocs(){
-apt update ; apt install ocserv
+apt update ; apt install ocserv -y
+sed -i "" /etc/ocserv/ocserv.conf
+echo -e "auth = "radius[config=/etc/radiusclient/radiusclient.conf,groupconfig=true]"\nipv4-network = 10.10.10.0\nipv4-netmask = 255.255.255.0"
 
 }
 function installl2tp(){
@@ -1516,7 +1518,7 @@ systemctl enable pptpd
 systemctl start pptpd
 }
 clear
-echo "1) First install OpenVPN Server With IBSng Config"
+echo "1) Install OpenVPN Server With IBSng Config"
 echo "2) Install Cisco Any Connect Server With IBSng Config"
 echo "3) Install L2TP Server With IBSng Config"
 echo "4) Install PPTP Server With IBSng Config"
