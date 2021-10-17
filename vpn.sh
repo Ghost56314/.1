@@ -1379,7 +1379,7 @@ function radiusConfig(){
           read -rp "Please Enter SecurePass: " secpass
 	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 	echo "server
 	{
 		acctport=1813
@@ -1462,7 +1462,7 @@ function radiusConfig(){
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 }
 function edit(){
-	sudo clear
+	clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
