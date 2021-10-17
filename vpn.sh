@@ -1367,7 +1367,7 @@ function radiusConfig(){
 	read securepass
 	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
-	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG   securepass   $securepass" /etc/radiusclient/radiusclient.conf
+	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1475,8 +1475,8 @@ function edit(){
     	  read -rp "Please Enter IBSng IP Address: " -e IPBS
           read -rp "Please Enter SecurePass: " -e secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
-		  echo "
+          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
+		  echo -e "
 	server
 	{
 		acctport=1813
