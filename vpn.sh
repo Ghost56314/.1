@@ -239,7 +239,7 @@ function installopenvpn(){
     		if [[ $APPROVE_IP =~ n ]]; then
     			read -rp "IP address: " -e -i "$IP" IP
     		fi
-    		# If $IP is a private IP address, the server must be behind NAT
+    		# If $IP is a private IP address, the server must be behind NAT
     		if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
     			echo ""
     			echo "It seems this server is behind NAT. What is its public IPv4 address or hostname?"
@@ -1347,7 +1347,6 @@ function installopenvpn(){
     	fi
     	radiusConfig
     	
-
     	
     	
 }
@@ -1368,7 +1367,7 @@ function radiusConfig(){
 	read securepass
 	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
-	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
+	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG   securepass   $securepass" /etc/radiusclient/radiusclient.conf
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1394,7 +1393,6 @@ function radiusConfig(){
           f=1
         fi
 	done
-
 	sudo touch /etc/radiusclient/dictionary.microsoft 
 	echo "VENDOR          Microsoft       311     Microsoft
 	BEGIN VENDOR    Microsoft
@@ -1458,16 +1456,13 @@ function radiusConfig(){
 	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
 	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
 	sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
-
-
 	echo "management 0.0.0.0 7506
 	plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 }
-
 function edit(){
-	clear
+	sudo clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
@@ -1480,7 +1475,7 @@ function edit(){
     	  read -rp "Please Enter IBSng IP Address: " -e IPBS
           read -rp "Please Enter SecurePass" -e secpass
           sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
+          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS   securepass   $secpass" /etc/radiusclient/radiusclient.conf
 		  echo "
 	server
 	{
@@ -1491,8 +1486,6 @@ function edit(){
 		wait=1
 		sharedsecret=$secpass
 	}" >> /usr/lib/openvpn/radiusplugin.cnf
-
-
 			else
 			f=1
 			fi
@@ -1502,7 +1495,6 @@ function installocs(){
 apt update ; apt install ocserv -y
 sed -i "" /etc/ocserv/ocserv.conf
 echo -e "auth = "radius[config=/etc/radiusclient/radiusclient.conf,groupconfig=true]"\nipv4-network = 10.10.10.0\nipv4-netmask = 255.255.255.0"
-
 }
 function installl2tp(){
 echo "ok"
