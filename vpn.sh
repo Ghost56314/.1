@@ -1,10 +1,6 @@
-function installopenvpn(){
        	#!/bin/bash
     	# shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
-    	
-    	# Secure OpenVPN server installer for Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux.
-    	# https://github.com/angristan/openvpn-install
-  
+function installopenvpn(){  
     	function isRoot() {
     		if [ "$EUID" -ne 0 ]; then
     			return 1
