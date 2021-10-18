@@ -1895,18 +1895,6 @@ ms-dns $DNS_SRV2
 EOF
   fi
 
-  # Create VPN credentials
-  conf_bk "/etc/ppp/chap-secrets"
-cat > /etc/ppp/chap-secrets <<EOF
-"$VPN_USER" l2tpd "$VPN_PASSWORD" *
-EOF
-
-  conf_bk "/etc/ipsec.d/passwd"
-  VPN_PASSWORD_ENC=$(openssl passwd -1 "$VPN_PASSWORD")
-cat > /etc/ipsec.d/passwd <<EOF
-$VPN_USER:$VPN_PASSWORD_ENC:xauth-psk
-EOF
-}
 
 update_sysctl() {
   bigecho "Updating sysctl settings..."
@@ -2068,14 +2056,8 @@ Connect to your new VPN with these details:
 
 Server IP: $public_ip
 IPsec PSK: $VPN_IPSEC_PSK
-Username: $VPN_USER
-Password: $VPN_PASSWORD
 
 Write these down. You'll need them to connect!
-
-Important notes:   https://git.io/vpnnotes
-Setup VPN clients: https://git.io/vpnclients
-IKEv2 guide:       https://git.io/ikev2
 
 ================================================
 
@@ -2146,7 +2128,7 @@ exit 0
 
 }
 function installpptp(){
-apt update ; apt install pptpd build-essential libgcrypt20-dev -y
+apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
 echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
