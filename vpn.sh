@@ -1369,10 +1369,10 @@ function radiusConfig(){
 	{
 		acctport=1813
 		authport=1812
-		name=$IPBS
+		name=$IPBSNG
 		retry=1
 		wait=1
-		sharedsecret=$secpass
+		sharedsecret=$securepass
 	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
 	f=0
 	while [ $f -eq 0 ]
