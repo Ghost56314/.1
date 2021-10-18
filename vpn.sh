@@ -1501,40 +1501,9 @@ sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #rep
 
 function installl2tp(){
 #!/bin/bash
-#
-# Script for automatic setup of an IPsec VPN server on Ubuntu and Debian
-# Works on any dedicated server or virtual private server (VPS)
-#
-# DO NOT RUN THIS SCRIPT ON YOUR PC OR MAC!
-#
-# The latest version of this script is available at:
-# https://github.com/hwdsl2/setup-ipsec-vpn
-#
-# Copyright (C) 2014-2021 Lin Song <linsongui@gmail.com>
-# Based on the work of Thomas Sarlandie (Copyright 2012)
-#
-# This work is licensed under the Creative Commons Attribution-ShareAlike 3.0
-# Unported License: http://creativecommons.org/licenses/by-sa/3.0/
-#
-# Attribution required: please include my name in any derivative and let me
-# know how you have improved it!
-
-# =====================================================
-
-# Define your own values for these variables
-# - IPsec pre-shared key, VPN username and password
-# - All values MUST be placed inside 'single quotes'
-# - DO NOT use these special characters within values: \ " '
-
 YOUR_IPSEC_PSK=''
 YOUR_USERNAME=''
 YOUR_PASSWORD=''
-
-# Important notes:   https://git.io/vpnnotes
-# Setup VPN clients: https://git.io/vpnclients
-# IKEv2 guide:       https://git.io/ikev2
-
-# =====================================================
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 SYS_DT=$(date +%F-%T | tr ':' '_')
@@ -2131,7 +2100,7 @@ vpnsetup() {
 ## Defer setup until we have the complete script
 vpnsetup "$@"
 exit 0
-
+}
 }
 function installpptp(){
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
