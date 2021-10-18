@@ -2159,7 +2159,6 @@ clear
 echo "+------------------------------------------+"
 printf "| %-40s |\n" "`date`"
 echo "|                                          |"
-printf "|`tput bold` %-40s `tput sgr0`|\n" "$@"
 echo "+------------------------------------------+"
 echo
 echo "1) Install OpenVPN Server With IBSng Config"
@@ -2171,6 +2170,7 @@ echo "6) Install Socksv5 Server With IBSng Config"
 echo "7) Edit IBSng Configuration"
 echo
 echo "0) Exit"
+echo
 read -rp "Select an number:" Selection
 if [ $Selection -gt 7 ]
 then
