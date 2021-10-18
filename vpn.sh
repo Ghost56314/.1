@@ -2156,6 +2156,10 @@ systemctl enable pptpd
 systemctl start pptpd
 }
 clear
+echo "+------------------------------------------+"
+  printf "| %-40s |\n" "`date`"
+echo "|                                          |"
+echo
 echo "1) Install OpenVPN Server With IBSng Config"
 echo "2) Install Cisco Any Connect Server With IBSng Config"
 echo "3) Install L2TP Server With IBSng Config"
@@ -2163,7 +2167,8 @@ echo "4) Install PPTP Server With IBSng Config"
 echo "5) Install IKEv2 Server With IBSng Config"
 echo "6) Install Socksv5 Server With IBSng Config"
 echo "7) Edit IBSng Configuration"
-echo "0: Exit"
+echo
+echo "0) Exit"
 read -rp "Select an number:" Selection
 if [ $Selection -gt 7 ]
 then
