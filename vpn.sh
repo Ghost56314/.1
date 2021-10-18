@@ -1488,15 +1488,14 @@ function edit(){
 	done
 }
 function installocs(){
-apt update ; apt install ocserv -y
-sed -i "" /etc/ocserv/ocserv.conf
-echo -e "auth = "radius[config=/etc/radiusclient/radiusclient.conf,groupconfig=true]"\nipv4-network = 10.10.10.0\nipv4-netmask = 255.255.255.0"
+apt update -qq ; apt install ocserv -y
 sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 read -rp "Please Enter ipv4-network: " ipv4
 sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+echo -e "iptables -t nat -I POSTROUTING 1 -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
 }
 
 function installl2tp(){
