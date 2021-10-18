@@ -1374,6 +1374,7 @@ function radiusConfig(){
 		wait=1
 		sharedsecret=$securepass
 	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
+	systemctl restart openvpn
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1396,6 +1397,7 @@ function radiusConfig(){
 		wait=1
 		sharedsecret=$secpass
 	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
+	systemctl restart openvpn
         else
           f=1
         fi
