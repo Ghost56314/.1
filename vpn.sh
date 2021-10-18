@@ -2157,8 +2157,10 @@ systemctl start pptpd
 }
 clear
 echo "+------------------------------------------+"
-  printf "| %-40s |\n" "`date`"
+printf "| %-40s |\n" "`date`"
 echo "|                                          |"
+printf "|`tput bold` %-40s `tput sgr0`|\n" "$@"
+echo "+------------------------------------------+"
 echo
 echo "1) Install OpenVPN Server With IBSng Config"
 echo "2) Install Cisco Any Connect Server With IBSng Config"
