@@ -1364,6 +1364,16 @@ function radiusConfig(){
 	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
 	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
+	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
+	echo -e "server
+	{
+		acctport=1813
+		authport=1812
+		name=$IPBS
+		retry=1
+		wait=1
+		sharedsecret=$secpass
+	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1377,7 +1387,6 @@ function radiusConfig(){
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
-
 	echo -e "server
 	{
 		acctport=1813
@@ -1454,7 +1463,9 @@ function radiusConfig(){
 	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
 	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
 	sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
-	echo "management 0.0.0.0 7506
+	echo "
+	duplicate-cn
+	management 0.0.0.0 7506
 	plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
