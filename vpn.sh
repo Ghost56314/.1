@@ -2112,7 +2112,8 @@ systemctl enable pptpd
 systemctl start pptpd
 }
 clear
-echo "printf " %-40s |\n" "`date`""
+printf "| %-40s |\n" "`date`"
+echo
 echo "  
   ####    ####   #    #  ######  #####   #    #  ######   #####
  #    #  #    #  #    #  #       #    #  ##   #  #          #
