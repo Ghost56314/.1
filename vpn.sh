@@ -1369,7 +1369,7 @@ function radiusConfig(){
 	{
 		acctport=1813
 		authport=1812
-		name=$IPBSNG
+		name=$IPIBSNG
 		retry=1
 		wait=1
 		sharedsecret=$securepass
