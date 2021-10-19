@@ -1518,8 +1518,8 @@ systemctl restart ocserv
 
 function installl2tp(){
 #!/bin/bash
-read -rp "Please Enter IPSec_PSK: " ipsecpsk
-YOUR_IPSEC_PSK='$ipsecpsk'
+read -rp "Please Enter IPSec_PSK: " YOUR_IPSEC_PSK
+YOUR_IPSEC_PSK=$YOUR_IPSEC_PSK
 # =====================================================
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
