@@ -1361,7 +1361,7 @@ function radiusConfig(){
 	read IPIBSNG
 	echo Please Enter SecurePass:
 	read securepass
-	echo "$IPIBSNG	$securepass" | sudo tee /etc/radiusclient/servers
+	echo -e "$IPIBSNG $securepass" | sudo tee -a /etc/radiusclient/servers
 	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
 	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
 	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
@@ -1511,7 +1511,9 @@ sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 read -rp "Please Enter ipv4-network: " ipv4
 sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
-echo -e "iptables -t nat -I POSTROUTING 1 -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+systemctl restart ocserv
 }
 
 function installl2tp(){
@@ -2083,7 +2085,7 @@ finish() {
   exit "$1"
 }
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
-echo -e "iptables -t nat -I POSTROUTING 1 -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
 systemctl enable xl2tpd
 systemctl start xl2tpd
 
@@ -2123,7 +2125,8 @@ echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
-echo -e "iptables -t nat -I POSTROUTING 1 -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
 systemctl start pptpd
 }
