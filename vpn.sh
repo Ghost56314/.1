@@ -1519,6 +1519,8 @@ systemctl restart ocserv
 function installl2tp(){
 #!/bin/bash
 YOUR_IPSEC_PSK=''
+# =====================================================
+
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 SYS_DT=$(date +%F-%T | tr ':' '_')
 
@@ -1596,15 +1598,13 @@ check_creds() {
   if [ -z "$VPN_IPSEC_PSK" ] ; then
     bigecho "VPN credentials not set by user. Generating random PSK and password..."
     VPN_IPSEC_PSK=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' </dev/urandom 2>/dev/null | head -c 20)
-    VPN_USER=vpnuser
-    VPN_PASSWORD=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' </dev/urandom 2>/dev/null | head -c 16)
   fi
 
-  if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
+  if [ -z "$VPN_IPSEC_PSK" ] ; then
     exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
   fi
 
-  if printf '%s' "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" | LC_ALL=C grep -q '[^ -~]\+'; then
+  if printf '%s' "$VPN_IPSEC_PSK" | LC_ALL=C grep -q '[^ -~]\+'; then
     exiterr "VPN credentials must not contain non-ASCII characters."
   fi
 
@@ -1783,9 +1783,11 @@ create_vpn_config() {
   conf_bk "/etc/ipsec.conf"
 cat > /etc/ipsec.conf <<EOF
 version 2.0
+
 config setup
   virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
   uniqueids=no
+
 conn shared
   left=%defaultroute
   leftid=$public_ip
@@ -1804,12 +1806,14 @@ conn shared
   ikelifetime=24h
   salifetime=24h
   sha2-truncbug=no
+
 conn l2tp-psk
   auto=add
   leftprotoport=17/1701
   rightprotoport=17/%any
   type=transport
   also=shared
+
 conn xauth-psk
   auto=add
   leftsubnet=0.0.0.0/0
@@ -1822,6 +1826,7 @@ conn xauth-psk
   modecfgpull=yes
   cisco-unity=yes
   also=shared
+
 include /etc/ipsec.d/*.conf
 EOF
 
@@ -1842,6 +1847,7 @@ EOF
 cat > /etc/xl2tpd/xl2tpd.conf <<EOF
 [global]
 port = 1701
+
 [lns default]
 ip range = $L2TP_POOL
 local ip = $L2TP_LOCAL
@@ -1873,16 +1879,21 @@ EOF
   if [ -z "$VPN_DNS_SRV1" ] || [ -n "$VPN_DNS_SRV2" ]; then
 cat >> /etc/ppp/options.xl2tpd <<EOF
 ms-dns $DNS_SRV2
+EOF
+  fi
 }
+
 
 update_sysctl() {
   bigecho "Updating sysctl settings..."
   if ! grep -qs "hwdsl2 VPN script" /etc/sysctl.conf; then
     conf_bk "/etc/sysctl.conf"
 cat >> /etc/sysctl.conf <<EOF
+
 # Added by hwdsl2 VPN script
 kernel.msgmnb = 65536
 kernel.msgmax = 65536
+
 net.ipv4.ip_forward = 1
 net.ipv4.conf.all.accept_redirects = 0
 net.ipv4.conf.all.send_redirects = 0
@@ -1892,6 +1903,7 @@ net.ipv4.conf.default.send_redirects = 0
 net.ipv4.conf.default.rp_filter = 0
 net.ipv4.conf.$NET_IFACE.send_redirects = 0
 net.ipv4.conf.$NET_IFACE.rp_filter = 0
+
 net.core.wmem_max = 12582912
 net.core.rmem_max = 12582912
 net.ipv4.tcp_rmem = 10240 87380 12582912
@@ -1966,13 +1978,17 @@ cat > /etc/systemd/system/load-iptables-rules.service <<'EOF'
 [Unit]
 Description = Load /etc/iptables.rules
 DefaultDependencies=no
+
 Before=network-pre.target
 Wants=network-pre.target
+
 Wants=systemd-modules-load.service local-fs.target
 After=systemd-modules-load.service local-fs.target
+
 [Service]
 Type=oneshot
 ExecStart=/etc/network/if-pre-up.d/iptablesload
+
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -1993,6 +2009,7 @@ EOF
       echo '#!/bin/sh' > /etc/rc.local
     fi
 cat >> /etc/rc.local <<'EOF'
+
 # Added by hwdsl2 VPN script
 (sleep 15
 service ipsec restart
@@ -2018,12 +2035,27 @@ start_services() {
 
 show_vpn_info() {
 cat <<EOF
+
 ================================================
+
 IPsec VPN server is now ready for use!
+
 Connect to your new VPN with these details:
+
 Server IP: $public_ip
 IPsec PSK: $VPN_IPSEC_PSK
 ================================================
+
+EOF
+  if [ ! -e /dev/ppp ]; then
+cat <<'EOF'
+Warning: /dev/ppp is missing, and IPsec/L2TP mode may not work. Please use
+         IKEv2 (https://git.io/ikev2) or IPsec/XAuth mode to connect.
+         Debian 11/10 =users, see https://git.io/vpndebian10
+
+EOF
+  fi
+}
 
 check_swan_ver() {
   swan_ver_url="https://dl.ls20.com/v1/$os_type/$os_ver/swanver?arch=$os_arch&ver=$SWAN_VER"
@@ -2036,6 +2068,7 @@ cat <<EOF
 Note: A newer version of Libreswan ($swan_ver_latest) is available.
       To update, run:
       wget https://git.io/vpnupgrade -O vpnup.sh && sudo sh vpnup.sh
+
 EOF
   fi
 }
