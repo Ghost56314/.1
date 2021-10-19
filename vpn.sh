@@ -2024,7 +2024,7 @@ EOF
 start_services() {
   bigecho "Starting services..."
   sysctl -e -q -p
-  echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
+  echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
   chmod +x /etc/rc.local
   mkdir -p /run/pluto
   service fail2ban restart 2>/dev/null
