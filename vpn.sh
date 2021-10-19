@@ -1471,6 +1471,7 @@ function radiusConfig(){
 	plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
+		systemctl restart openvpn
 }
 function edit(){
 	clear
@@ -1498,6 +1499,7 @@ function edit(){
 		wait=1
 		sharedsecret=$secpass
 	}" >> /usr/lib/openvpn/radiusplugin.cnf
+	systemctl restart openvpn
 			else
 			f=1
 			fi
