@@ -2115,7 +2115,7 @@ echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\np
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
-iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
 systemctl start pptpd
 }
