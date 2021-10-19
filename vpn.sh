@@ -2114,6 +2114,7 @@ echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
 iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
