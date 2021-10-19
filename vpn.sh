@@ -1511,6 +1511,7 @@ sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
+clear
 read -rp "Please Enter ipv4-network: " ipv4
 sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
