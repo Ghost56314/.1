@@ -1518,7 +1518,8 @@ systemctl restart ocserv
 
 function installl2tp(){
 #!/bin/bash
-YOUR_IPSEC_PSK=''
+read -rp "Please Enter IPSec_PSK: " ipsecpsk
+YOUR_IPSEC_PSK='$ipsecpsk'
 # =====================================================
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -2101,6 +2102,7 @@ vpnsetup() {
   start_services
   show_vpn_info
 }
+echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
 
 ## Defer setup until we have the complete script
 vpnsetup "$@"
