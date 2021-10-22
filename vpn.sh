@@ -1518,6 +1518,7 @@ NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
 systemctl restart ocserv
+radiusConfig
 }
 
 function installl2tp(){
@@ -1537,6 +1538,7 @@ bigecho() { echo "## $1"; }
 check_ip() {
   IP_REGEX='^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
   printf '%s' "$1" | tr -d '\n' | grep -Eq "$IP_REGEX"
+
 }
 
 check_root() {
@@ -2109,7 +2111,7 @@ vpnsetup() {
 
 ## Defer setup until we have the complete script
 vpnsetup "$@"
-
+radiusConfig
 exit 0
 }
 function installpptp(){
@@ -2123,6 +2125,7 @@ echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUER
 iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
 systemctl start pptpd
+radiusConfig
 }
 clear
 printf " %-40s \n" "`date`"
