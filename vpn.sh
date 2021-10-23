@@ -1,5 +1,5 @@
-       	#!/bin/bash
-    	# shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
+#!/bin/bash
+# shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 function installopenvpn(){  
     	function isRoot() {
     		if [ "$EUID" -ne 0 ]; then
@@ -1347,6 +1347,35 @@ function installopenvpn(){
     	
 }
 ####### NEW CODE #############
+
+function PrivateAddress(){
+read -rp "Please Enter ipv4-network: " ipv4
+if [ $Selection -eq 1 ]
+then
+        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
+elif [ $Selection -eq 2 ]
+then
+  #installocs
+  sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+elif [ $Selection -eq 3 ]
+then
+  #installl2tp
+  rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
+  sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
+elif [ $Selection -eq 4 ]
+then
+  #installpptp
+  localip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.1/g')
+  remoteip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
+  sed -i -r -E "s/^(localip\s+).*/\1$localip/g" /etc/pptpd.conf #replace
+  sed -i -r  -E "s/^(remoteip\s+).*/\1$remoteip/g" /etc/pptpd.conf #replace
+fi
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+}
+
+
 function radiusConfig(){
 	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
 	sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
@@ -1472,6 +1501,9 @@ function radiusConfig(){
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 		systemctl restart openvpn
+
+PrivateAddress # call thos function for replace private address in its files and set iptables		
+
 }
 function edit(){
 	clear
@@ -2115,8 +2147,9 @@ radiusConfig
 exit 0
 }
 function installpptp(){
+echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
-echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
+#echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
@@ -2150,7 +2183,11 @@ echo "7) Edit IBSng Configuration"
 echo
 echo "0) Exit"
 echo
-read -rp "Select an number:" Selection
+
+
+
+read -rp "Select a number:" Selection
+
 if [ $Selection -gt 7 ]
 then
   echo "The variable is greater than 7."
@@ -2179,3 +2216,4 @@ then
 else
   echo "Exit"
 fi
+
