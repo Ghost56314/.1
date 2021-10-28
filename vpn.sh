@@ -1422,7 +1422,7 @@ function radiusConfig(){
 		retry=1
 		wait=1
 		sharedsecret=$secpass
-	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
+	}" >> /usr/lib/openvpn/radiusplugin.cnf
 	systemctl restart openvpn
         else
           f=1
