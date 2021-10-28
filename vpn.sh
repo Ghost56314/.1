@@ -1347,7 +1347,6 @@ function installopenvpn(){
     	
 }
 ####### NEW CODE #############
-
 function PrivateAddress(){
 read -rp "Please Enter ipv4-network: " ipv4
 if [ $Selection -eq 1 ]
@@ -1367,43 +1366,41 @@ then
   #installpptp
   localip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.1/g')
   remoteip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
-  sed -i -r -E "s/^(localip\s+).*/\1$localip/g" /etc/pptpd.conf #replace
-  sed -i -r  -E "s/^(remoteip\s+).*/\1$remoteip/g" /etc/pptpd.conf #replace
+  echo -e "localip $localip" >> /etc/pptpd.conf #replace
+  echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
 fi
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 }
-
-
 function radiusConfig(){
-	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
-	sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-	sudo unzip master.zip
-	sudo mv freeradius-client-master freeradius-client
-	cd freeradius-client
-	./configure --prefix=/
-	sudo make && sudo make install
-	sudo apt install openvpn-auth-radius -y
+    packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
+    for pkg in ${packages[@]}; do
+        #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
+		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
+		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
+			echo ${pkg} is installed.
+        else
+            sudo apt install   ${pkg} -y
+        fi
+    done
+
+#	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
+
+	freeradius=/etc/radiusclient/radiusclient.conf
+	if test -f "$freeradius"; then
+        echo freeradius is installed.
+    else
+		sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
+		sudo unzip master.zip
+		sudo mv freeradius-client-master freeradius-client
+		cd freeradius-client
+		./configure --prefix=/
+		sudo make && sudo make install
+    fi
+
 	sudo clear
-	echo Please Enter IBSng IP Address:
-	read IPIBSNG
-	echo Please Enter SecurePass:
-	read securepass
-	echo -e "$IPIBSNG $securepass" | sudo tee -a /etc/radiusclient/servers
-	sed -i -r "/.*simply.*/a authserver   $IPIBSNG"  /etc/radiusclient/radiusclient.conf
-	sed -i -r "/.*for authserver applies.*/a acctserver   $IPIBSNG" /etc/radiusclient/radiusclient.conf
-	cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
-	echo -e "server
-	{
-		acctport=1813
-		authport=1812
-		name=$IPIBSNG
-		retry=1
-		wait=1
-		sharedsecret=$securepass
-	}" | sudo tee -a /usr/lib/openvpn/radiusplugin.cnf
-	systemctl restart openvpn
+	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
 	do
@@ -1501,9 +1498,7 @@ function radiusConfig(){
 	log /var/log/openvpn/pa-ibs.log
 	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 		systemctl restart openvpn
-
 PrivateAddress # call thos function for replace private address in its files and set iptables		
-
 }
 function edit(){
 	clear
@@ -1522,37 +1517,44 @@ function edit(){
           sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 	  cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
 		  echo -e "
-	server
-	{
-		acctport=1813
-		authport=1812
-		name=$IPBS
-		retry=1
-		wait=1
-		sharedsecret=$secpass
-	}" >> /usr/lib/openvpn/radiusplugin.cnf
+server
+{
+        # The UDP port for radius accounting.
+        acctport=1813
+        # The UDP port for radius authentication.
+        authport=1812
+        # The name or ip address of the radius server.
+        name=$IPBS
+        # How many times should the plugin send the if there is no response?
+        retry=1
+        # How long should the plugin wait for a response?
+        wait=1
+        # The shared secret.
+        sharedsecret=$secpass
+}
+				 " >> /usr/lib/openvpn/radiusplugin.cnf
 	systemctl restart openvpn
-			else
+		else
 			f=1
-			fi
+		fi
 	done
 }
 function installocs(){
+echo installing...
 apt update -qq ; apt install ocserv -y
 sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
-clear
-read -rp "Please Enter ipv4-network: " ipv4
-sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+# clear
+# read -rp "Please Enter ipv4-network: " ipv4
+# sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+# NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+# iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
+# echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
 systemctl restart ocserv
 radiusConfig
 }
-
 function installl2tp(){
 #!/bin/bash
 read -rp "Please Enter IPSec_PSK: " YOUR_IPSEC_PSK
@@ -2160,60 +2162,67 @@ systemctl enable pptpd
 systemctl start pptpd
 radiusConfig
 }
-clear
-printf " %-40s \n" "`date`"
-echo
-echo
-echo "  
-  ####    ####   #    #  ######  #####   #    #  ######   #####
- #    #  #    #  #    #  #       #    #  ##   #  #          #
- #       #    #  #    #  #####   #    #  # #  #  #####      #
- #       #    #  #    #  #       #####   #  # #  #          #
- #    #  #    #   #  #   #       #   #   #   ##  #          #
-  ####    ####     ##    ######  #    #  #    #  ######     #"
-echo
-echo
-echo "1) Install OpenVPN Server With IBSng Config"
-echo "2) Install Cisco Any Connect Server With IBSng Config"
-echo "3) Install L2TP Server With IBSng Config"
-echo "4) Install PPTP Server With IBSng Config"
-echo "5) Install IKEv2 Server With IBSng Config"
-echo "6) Install Socksv5 Server With IBSng Config"
-echo "7) Edit IBSng Configuration"
-echo
-echo "0) Exit"
-echo
 
+function Selection(){
+	choice=0
+	while [ $choice -eq 0 ]
+	do
+	clear
+	printf " %-40s \n" "`date`"
+	echo
+	echo
+	echo "  
+	 ####    ####   #    #  ######  #####   #    #  ######   #####
+	#    #  #    #  #    #  #       #    #  ##   #  #          #
+	#       #    #  #    #  #####   #    #  # #  #  #####      #
+	#       #    #  #    #  #       #####   #  # #  #          #
+	#    #  #    #   #  #   #       #   #   #   ##  #          #
+	 ####    ####     ##    ######  #    #  #    #  ######     #"
+	echo
+	echo
+	echo "1) Install OpenVPN Server With IBSng Config"
+	echo "2) Install Cisco Any Connect Server With IBSng Config"
+	echo "3) Install L2TP Server With IBSng Config"
+	echo "4) Install PPTP Server With IBSng Config"
+	echo "5) Install IKEv2 Server With IBSng Config"
+	echo "6) Install Socksv5 Server With IBSng Config"
+	echo "7) Edit IBSng Configuration"
+	echo
+	echo "0) Exit"
+	echo
+	read -rp "Select a number:" Selection
 
-
-read -rp "Select a number:" Selection
-
-if [ $Selection -gt 7 ]
-then
-  echo "The variable is greater than 7."
-  :
-elif [ $Selection -eq 1 ]
-then
-  installopenvpn
-elif [ $Selection -eq 2 ]
-then
-  installocs
-elif [ $Selection -eq 3 ]
-then
-  installl2tp
-elif [ $Selection -eq 4 ]
-then
-  installpptp
-elif [ $Selection -eq 5 ]
-then
-  installikev2
-elif [ $Selection -eq 6 ]
-then
-  installsocks5
-elif [ $Selection -eq 7 ]
-then
-  edit
-else
-  echo "Exit"
-fi
-
+	if [ $Selection -gt 7 ]
+	then
+		echo "The variable is greater than 7."
+		sleep 1s
+	elif [ $Selection -eq 1 ]
+	then
+		installopenvpn
+	elif [ $Selection -eq 2 ]
+	then
+		installocs
+	elif [ $Selection -eq 3 ]
+	then
+		installl2tp
+	elif [ $Selection -eq 4 ]
+	then
+		installpptp
+	elif [ $Selection -eq 5 ]
+	then
+		installikev2
+	elif [ $Selection -eq 6 ]
+	then
+		installsocks5
+	elif [ $Selection -eq 7 ]
+	then
+		edit
+	elif [ $Selection -eq 0 ]
+	then
+		choice=1
+	else
+		echo "Exit"
+	fi
+	done
+}
+Selection
