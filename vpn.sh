@@ -1348,7 +1348,7 @@ function installopenvpn(){
 }
 ####### NEW CODE #############
 function PrivateAddress(){
-read -rp "Please Enter ipv4-network: " ipv4
+read -rp "Please Enter IP Address Network (For example 192.168.1.0/24) : " ipv4
 if [ $Selection -eq 1 ]
 then
         sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
