@@ -1380,8 +1380,79 @@ function radiusConfig(){
 		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
 		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
 			echo ${pkg} is installed.
+
         else
             sudo apt install   ${pkg} -y
+			sudo touch /etc/radiusclient/dictionary.microsoft 
+			echo "VENDOR          Microsoft       311     Microsoft
+			BEGIN VENDOR    Microsoft
+			ATTRIBUTE       MS-CHAP-Response        1       string  Microsoft
+			ATTRIBUTE       MS-CHAP-Error           2       string  Microsoft
+			ATTRIBUTE       MS-CHAP-CPW-1           3       string  Microsoft
+			ATTRIBUTE       MS-CHAP-CPW-2           4       string  Microsoft
+			ATTRIBUTE       MS-CHAP-LM-Enc-PW       5       string  Microsoft
+			ATTRIBUTE       MS-CHAP-NT-Enc-PW       6       string  Microsoft
+			ATTRIBUTE       MS-MPPE-Encryption-Policy 7     string  Microsoft
+			ATTRIBUTE       MS-MPPE-Encryption-Type 8       string  Microsoft
+			ATTRIBUTE       MS-MPPE-Encryption-Types  8     string  Microsoft
+			ATTRIBUTE       MS-RAS-Vendor           9       integer Microsoft
+			ATTRIBUTE       MS-CHAP-Domain          10      string  Microsoft
+			ATTRIBUTE       MS-CHAP-Challenge       11      string  Microsoft
+			ATTRIBUTE       MS-CHAP-MPPE-Keys       12      string  Microsoft encrypt=1
+			ATTRIBUTE       MS-BAP-Usage            13      integer Microsoft
+			ATTRIBUTE       MS-Link-Utilization-Threshold 14 integer        Microsoft
+			ATTRIBUTE       MS-Link-Drop-Time-Limit 15      integer Microsoft
+			ATTRIBUTE       MS-MPPE-Send-Key        16      string  Microsoft
+			ATTRIBUTE       MS-MPPE-Recv-Key        17      string  Microsoft
+			ATTRIBUTE       MS-RAS-Version          18      string  Microsoft
+			ATTRIBUTE       MS-Old-ARAP-Password    19      string  Microsoft
+			ATTRIBUTE       MS-New-ARAP-Password    20      string  Microsoft
+			ATTRIBUTE       MS-ARAP-PW-Change-Reason 21     integer Microsoft
+			ATTRIBUTE       MS-Filter               22      string  Microsoft
+			ATTRIBUTE       MS-Acct-Auth-Type       23      integer Microsoft
+			ATTRIBUTE       MS-Acct-EAP-Type        24      integer Microsoft
+			ATTRIBUTE       MS-CHAP2-Response       25      string  Microsoft
+			ATTRIBUTE       MS-CHAP2-Success        26      string  Microsoft
+			ATTRIBUTE       MS-CHAP2-CPW            27      string  Microsoft
+			ATTRIBUTE       MS-Primary-DNS-Server   28      ipaddr
+			ATTRIBUTE       MS-Secondary-DNS-Server 29      ipaddr
+			ATTRIBUTE       MS-Primary-NBNS-Server  30      ipaddr Microsoft
+			ATTRIBUTE       MS-Secondary-NBNS-Server 31     ipaddr Microsoft
+			VALUE           MS-BAP-Usage            Not-Allowed     0
+			VALUE           MS-BAP-Usage            Allowed         1
+			VALUE           MS-BAP-Usage            Required        2
+			VALUE   MS-ARAP-PW-Change-Reason        Just-Change-Password            1
+			VALUE   MS-ARAP-PW-Change-Reason        Expired-Password                2
+			VALUE   MS-ARAP-PW-Change-Reason        Admin-Requires-Password-Change  3
+			VALUE   MS-ARAP-PW-Change-Reason        Password-Too-Short              4
+			VALUE           MS-Acct-Auth-Type       PAP             1
+			VALUE           MS-Acct-Auth-Type       CHAP            2
+			VALUE           MS-Acct-Auth-Type       MS-CHAP-1       3
+			VALUE           MS-Acct-Auth-Type       MS-CHAP-2       4
+			VALUE           MS-Acct-Auth-Type       EAP             5
+			VALUE           MS-Acct-EAP-Type        MD5             4
+			VALUE           MS-Acct-EAP-Type        OTP             5
+			VALUE           MS-Acct-EAP-Type        Generic-Token-Card      6
+			VALUE           MS-Acct-EAP-Type        TLS             13" >> /etc/radiusclient/dictionary.microsoft
+			sudo  sed -i '/.*ATTRIBUTE NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
+			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
+			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
+			sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
+			echo "
+			duplicate-cn
+			management 0.0.0.0 7506
+			plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
+			log /var/log/openvpn/pa-ibs.log
+			status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
+				systemctl restart openvpn
         fi
     done
 
@@ -1431,76 +1502,7 @@ function radiusConfig(){
           f=1
         fi
 	done
-	sudo touch /etc/radiusclient/dictionary.microsoft 
-	echo "VENDOR          Microsoft       311     Microsoft
-	BEGIN VENDOR    Microsoft
-	ATTRIBUTE       MS-CHAP-Response        1       string  Microsoft
-	ATTRIBUTE       MS-CHAP-Error           2       string  Microsoft
-	ATTRIBUTE       MS-CHAP-CPW-1           3       string  Microsoft
-	ATTRIBUTE       MS-CHAP-CPW-2           4       string  Microsoft
-	ATTRIBUTE       MS-CHAP-LM-Enc-PW       5       string  Microsoft
-	ATTRIBUTE       MS-CHAP-NT-Enc-PW       6       string  Microsoft
-	ATTRIBUTE       MS-MPPE-Encryption-Policy 7     string  Microsoft
-	ATTRIBUTE       MS-MPPE-Encryption-Type 8       string  Microsoft
-	ATTRIBUTE       MS-MPPE-Encryption-Types  8     string  Microsoft
-	ATTRIBUTE       MS-RAS-Vendor           9       integer Microsoft
-	ATTRIBUTE       MS-CHAP-Domain          10      string  Microsoft
-	ATTRIBUTE       MS-CHAP-Challenge       11      string  Microsoft
-	ATTRIBUTE       MS-CHAP-MPPE-Keys       12      string  Microsoft encrypt=1
-	ATTRIBUTE       MS-BAP-Usage            13      integer Microsoft
-	ATTRIBUTE       MS-Link-Utilization-Threshold 14 integer        Microsoft
-	ATTRIBUTE       MS-Link-Drop-Time-Limit 15      integer Microsoft
-	ATTRIBUTE       MS-MPPE-Send-Key        16      string  Microsoft
-	ATTRIBUTE       MS-MPPE-Recv-Key        17      string  Microsoft
-	ATTRIBUTE       MS-RAS-Version          18      string  Microsoft
-	ATTRIBUTE       MS-Old-ARAP-Password    19      string  Microsoft
-	ATTRIBUTE       MS-New-ARAP-Password    20      string  Microsoft
-	ATTRIBUTE       MS-ARAP-PW-Change-Reason 21     integer Microsoft
-	ATTRIBUTE       MS-Filter               22      string  Microsoft
-	ATTRIBUTE       MS-Acct-Auth-Type       23      integer Microsoft
-	ATTRIBUTE       MS-Acct-EAP-Type        24      integer Microsoft
-	ATTRIBUTE       MS-CHAP2-Response       25      string  Microsoft
-	ATTRIBUTE       MS-CHAP2-Success        26      string  Microsoft
-	ATTRIBUTE       MS-CHAP2-CPW            27      string  Microsoft
-	ATTRIBUTE       MS-Primary-DNS-Server   28      ipaddr
-	ATTRIBUTE       MS-Secondary-DNS-Server 29      ipaddr
-	ATTRIBUTE       MS-Primary-NBNS-Server  30      ipaddr Microsoft
-	ATTRIBUTE       MS-Secondary-NBNS-Server 31     ipaddr Microsoft
-	VALUE           MS-BAP-Usage            Not-Allowed     0
-	VALUE           MS-BAP-Usage            Allowed         1
-	VALUE           MS-BAP-Usage            Required        2
-	VALUE   MS-ARAP-PW-Change-Reason        Just-Change-Password            1
-	VALUE   MS-ARAP-PW-Change-Reason        Expired-Password                2
-	VALUE   MS-ARAP-PW-Change-Reason        Admin-Requires-Password-Change  3
-	VALUE   MS-ARAP-PW-Change-Reason        Password-Too-Short              4
-	VALUE           MS-Acct-Auth-Type       PAP             1
-	VALUE           MS-Acct-Auth-Type       CHAP            2
-	VALUE           MS-Acct-Auth-Type       MS-CHAP-1       3
-	VALUE           MS-Acct-Auth-Type       MS-CHAP-2       4
-	VALUE           MS-Acct-Auth-Type       EAP             5
-	VALUE           MS-Acct-EAP-Type        MD5             4
-	VALUE           MS-Acct-EAP-Type        OTP             5
-	VALUE           MS-Acct-EAP-Type        Generic-Token-Card      6
-	VALUE           MS-Acct-EAP-Type        TLS             13" >> /etc/radiusclient/dictionary.microsoft
-	sudo  sed -i '/.*ATTRIBUTE NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo  sed -i '/.*ATTRIBUTE Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
-	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
-	sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
-	sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
-	echo "
-	duplicate-cn
-	management 0.0.0.0 7506
-	plugin /usr/lib/openvpn/radiusplugin.so  /usr/lib/openvpn/radiusplugin.cnf
-	log /var/log/openvpn/pa-ibs.log
-	status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
-		systemctl restart openvpn
+
 PrivateAddress # call thos function for replace private address in its files and set iptables		
 }
 function edit(){
