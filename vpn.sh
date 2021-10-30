@@ -1399,7 +1399,9 @@ function radiusConfig(){
 		sudo make && sudo make install
 		cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
     fi
-
+	
+	sudo sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
+	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	sudo clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
@@ -2146,7 +2148,7 @@ vpnsetup() {
 ## Defer setup until we have the complete script
 vpnsetup "$@"
 radiusConfig
-exit 0
+#exit 0
 }
 function installpptp(){
 echo "Installing..."
