@@ -1480,7 +1480,6 @@ function radiusConfig(){
 	until [[ $ans =~ ^[y-n]+$ ]]; do
         echo "Do you have another RAS IP?[y/n]"
         read ans
-    		done
         if [ "$ans" = "y" ]
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
@@ -1513,7 +1512,6 @@ function edit(){
 	while [ $f -eq 0 ]
 	until [[ $ans =~ ^[y-n]+$ ]]; do
         echo "Do you have another RAS IP?[y/n]"
-    		done
         read ans
         if [ "$ans" = "y" ]
         then
