@@ -1477,7 +1477,8 @@ function radiusConfig(){
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
-	until [[ $ans =~ ^[y-n]+$ ]]; do
+	#until [[ $ans =~ ^[y-n]+$ ]]; 
+	do
         echo "Do you have another RAS IP?[y/n]"
         read ans
         if [ "$ans" = "y" ]
@@ -1510,7 +1511,8 @@ function edit(){
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	while [ $f -eq 0 ]
-	until [[ $ans =~ ^[y-n]+$ ]]; do
+	#until [[ $ans =~ ^[y-n]+$ ]]; 
+	do
         echo "Do you have another RAS IP?[y/n]"
         read ans
         if [ "$ans" = "y" ]
