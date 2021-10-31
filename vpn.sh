@@ -1513,7 +1513,9 @@ function edit(){
 	f=0
 	while [ $f -eq 0 ]
 	do
-        echo "Do you have abother ip?[y/n]"
+        echo "Do you have another RAS IP?[y/n]"
+	until [[ $ans =~ ^[y-n]+$ ]]; do
+    		done
         read ans
         if [ "$ans" = "y" ]
         then
