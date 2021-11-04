@@ -1374,6 +1374,22 @@ iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 }
 function radiusConfig(){
+
+#	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
+
+	freeradius=/etc/radiusclient/radiusclient.conf
+	if test -f "$freeradius"; then
+        echo freeradius is installed.
+    else
+		sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
+		sudo unzip master.zip
+		sudo mv freeradius-client-master freeradius-client
+		cd freeradius-client
+		./configure --prefix=/
+		sudo make && sudo make install
+		cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
+    fi
+	
     packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
     for pkg in ${packages[@]}; do
         #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
@@ -1456,21 +1472,6 @@ function radiusConfig(){
         fi
     done
 
-#	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
-
-	freeradius=/etc/radiusclient/radiusclient.conf
-	if test -f "$freeradius"; then
-        echo freeradius is installed.
-    else
-		sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-		sudo unzip master.zip
-		sudo mv freeradius-client-master freeradius-client
-		cd freeradius-client
-		./configure --prefix=/
-		sudo make && sudo make install
-		cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
-    fi
-	
 	sudo sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	sudo clear
@@ -1520,8 +1521,8 @@ function edit(){
           clear
     	  read -rp "Please Enter IBSng IP Address: " -e IPBS
           read -rp "Please Enter SecurePass: " -e secpass
-          sudo sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          sudo sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 	  	  echo -e "
 server
 {
@@ -1547,11 +1548,21 @@ server
 }
 function installocs(){
 echo installing...
-apt update -qq ; apt install ocserv -y
+apt update -qq ; apt install ocserv certbot -y
+read -rp "Please Enter Domain For OCServ SSL: " ocdomain
+read -rp "Please Enter Email For OCServ SSL: " ocmail
+certbot certonly --standalone --preferred-challenges http --agree-tos --email $ocmail -d $ocdomain
+server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem
+server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem
 sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
+sed -i -r '/^server-key/s/^/#/g' /etc/ocserv/ocserv.conf #comment
+sed -i -r '/^server-cert/s/^/#/g' /etc/ocserv/ocserv.conf #comment
+sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/fullchain.pem"  /etc/ocserv/ocserv.conf
+sed -i -r "/.*socket-file.*/a server-key = /etc/letsencrypt/live/$ocdomain/privkey.pem"  /etc/ocserv/ocserv.conf
+
 # clear
 # read -rp "Please Enter ipv4-network: " ipv4
 # sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
