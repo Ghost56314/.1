@@ -1375,8 +1375,7 @@ echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sud
 }
 function radiusConfig(){
 
-#	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
-
+	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
 	freeradius=/etc/radiusclient/radiusclient.conf
 	if test -f "$freeradius"; then
         echo freeradius is installed.
