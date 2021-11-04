@@ -1549,8 +1549,9 @@ server
 function installocs(){
 echo installing...
 apt update -qq ; apt install ocserv certbot -y
-read -rp "Please Enter Domain For OCServ SSL: " ocdomain
-read -rp "Please Enter Email For OCServ SSL: " ocmail
+clear
+read -rp "Please Enter Domain For ocserv SSL: " ocdomain
+read -rp "Please Enter Email For ocserv SSL: " ocmail
 certbot certonly --standalone --preferred-challenges http --agree-tos --email $ocmail -d $ocdomain
 server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem
 server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem
@@ -1560,15 +1561,8 @@ sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
 sed -i    '/.*route = default.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^server-key/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/^server-cert/s/^/#/g' /etc/ocserv/ocserv.conf #comment
-sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/fullchain.pem"  /etc/ocserv/ocserv.conf
 sed -i -r "/.*socket-file.*/a server-key = /etc/letsencrypt/live/$ocdomain/privkey.pem"  /etc/ocserv/ocserv.conf
-
-# clear
-# read -rp "Please Enter ipv4-network: " ipv4
-# sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
-# NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-# iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
-# echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/fullchain.pem"  /etc/ocserv/ocserv.conf
 systemctl restart ocserv
 radiusConfig
 }
