@@ -1481,9 +1481,9 @@ function radiusConfig(){
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	#f=0
 	#while [ $f -eq 0 ]
-	until [[ $ans =~ ^[y-n]+$ ]]; 
+	until [[ $ans =~ ^[y|n]+$ ]]; 
 	do
-        echo "Add RAS IP Address?[y/n]" -i y
+        echo "Add RAS IP Address?[y/n]" -i "y" ans
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1525,9 +1525,9 @@ function edit(){
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	#f=0
 	#while [ $f -eq 0 ]
-	until [[ $ans =~ ^[y-n]+$ ]]; 
+	until [[ $ans =~ ^[y|n]+$ ]]; 
 	do
-        echo "Do you have another RAS IP?[y/n]" -i y
+        echo "Do you have another RAS IP?[y/n]" -i "y" ans
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1537,19 +1537,21 @@ function edit(){
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
 	  	  echo -e "
+	NAS-Identifier=OpenVpn
+	Service-Type=5
+	Framed-Protocol=1
+	NAS-Port-Type=5
+	NAS-IP-Address=$IP
+	OpenVPNConfig=/etc/openvpn/server.conf
+	subnet=255.255.255.0
+	overwriteccfiles=true
 server
 {
-        # The UDP port for radius accounting.
         acctport=1813
-        # The UDP port for radius authentication.
         authport=1812
-        # The name or ip address of the radius server.
         name=$IPBS
-        # How many times should the plugin send the if there is no response?
         retry=1
-        # How long should the plugin wait for a response?
         wait=1
-        # The shared secret.
         sharedsecret=$secpass
 }
 				 " >> /usr/lib/openvpn/radiusplugin.cnf
