@@ -1483,7 +1483,7 @@ function radiusConfig(){
 	#while [ $f -eq 0 ]
 	until [[ $ans =~ ^[y|n]+$ ]]; 
 	do
-        echo "Add RAS IP Address?[y/n]" -i "y" ans
+        echo "Add RAS IP Address?[y/n]"
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1527,7 +1527,7 @@ function edit(){
 	#while [ $f -eq 0 ]
 	until [[ $ans =~ ^[y|n]+$ ]]; 
 	do
-        echo "Do you have another RAS IP?[y/n]" -i "y" ans
+        echo "Do you have another RAS IP?[y/n]"
         read ans
         if [ "$ans" = "y" ]
         then
