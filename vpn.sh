@@ -1380,7 +1380,18 @@ echo -e "iptables -t nat -I POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE" | sud
 }
 function radiusConfig(){
 
-	sudo apt install openvpn-auth-radius build-essential libgcrypt20-dev unzip -y
+	packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
+    for pkg in ${packages[@]}; do
+        #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
+		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
+		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
+			echo ${pkg} is installed.
+
+        else
+            sudo apt install   ${pkg} -y
+		fi
+	done
+	
 	freeradius=/etc/radiusclient/radiusclient.conf
 	if test -f "$freeradius"; then
         echo freeradius is installed.
@@ -1391,18 +1402,7 @@ function radiusConfig(){
 		cd freeradius-client
 		./configure --prefix=/
 		sudo make && sudo make install
-    fi
-	
-    packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
-    for pkg in ${packages[@]}; do
-        #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
-		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
-		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
-			echo ${pkg} is installed.
-
-        else
-            sudo apt install   ${pkg} -y
-			sudo touch /etc/radiusclient/dictionary.microsoft 
+		sudo touch /etc/radiusclient/dictionary.microsoft 
 			echo "VENDOR          Microsoft       311     Microsoft
 			BEGIN VENDOR    Microsoft
 			ATTRIBUTE       MS-CHAP-Response        1       string  Microsoft
@@ -1473,7 +1473,11 @@ function radiusConfig(){
 			status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 				systemctl restart openvpn
         fi
-    done
+    
+	
+
+
+    
 
 	sudo sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
@@ -1489,7 +1493,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
-	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
