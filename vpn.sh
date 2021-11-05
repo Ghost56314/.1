@@ -1479,11 +1479,11 @@ function radiusConfig(){
 	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	sudo clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
-	f=0
-	while [ $f -eq 0 ]
-	#until [[ $ans =~ ^[y-n]+$ ]]; 
+	#f=0
+	#while [ $f -eq 0 ]
+	until [[ $ans =~ ^[y-n]+$ ]]; 
 	do
-        echo "Add RAS IP Address?[y/n]"
+        echo "Add RAS IP Address?[y/n]" -i "y"
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1514,7 +1514,8 @@ function radiusConfig(){
 	}" >> /usr/lib/openvpn/radiusplugin.cnf
 	systemctl restart openvpn
         else
-          f=1
+          #f=1
+	  exit 0
         fi
 	done
 
