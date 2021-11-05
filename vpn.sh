@@ -1364,7 +1364,7 @@ then
 #installl2tp
   rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
   sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
-  systemctl restart xl2tp ipsec
+  systemctl restart xl2tpd ipsec
 elif [ $Selection -eq 4 ]
 then
 #installpptp
