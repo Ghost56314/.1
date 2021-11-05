@@ -1483,7 +1483,7 @@ function radiusConfig(){
 	#while [ $f -eq 0 ]
 	until [[ $ans =~ ^[y-n]+$ ]]; 
 	do
-        echo "Add RAS IP Address?[y/n]" -i "y"
+        echo "Add RAS IP Address?[y/n]" -i y
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1514,8 +1514,7 @@ function radiusConfig(){
 	}" >> /usr/lib/openvpn/radiusplugin.cnf
 	systemctl restart openvpn
         else
-          #f=1
-	  exit 0
+          f=1
         fi
 	done
 
@@ -1524,11 +1523,11 @@ PrivateAddress # call thos function for replace private address in its files and
 function edit(){
 	clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
-	f=0
-	while [ $f -eq 0 ]
-	#until [[ $ans =~ ^[y-n]+$ ]]; 
+	#f=0
+	#while [ $f -eq 0 ]
+	until [[ $ans =~ ^[y-n]+$ ]]; 
 	do
-        echo "Do you have another RAS IP?[y/n]"
+        echo "Do you have another RAS IP?[y/n]" -i y
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1567,8 +1566,6 @@ clear
 read -rp "Please Enter Domain For ocserv SSL: " ocdomain
 read -rp "Please Enter Email For ocserv SSL: " ocmail
 certbot certonly --standalone --preferred-challenges http --agree-tos --email $ocmail -d $ocdomain
-server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem
-server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem
 sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
