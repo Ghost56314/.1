@@ -1478,7 +1478,7 @@ function radiusConfig(){
 	while [ $f -eq 0 ]
 	#until [[ $ans =~ ^[y-n]+$ ]]; 
 	do
-        echo "Do you have another RAS IP?[y/n]"
+        echo "Add RAS IP Address?[y/n]"
         read ans
         if [ "$ans" = "y" ]
         then
@@ -1487,17 +1487,19 @@ function radiusConfig(){
 	  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
-          
-	echo -e "server
+          echo "Add Successfully"
+	  sleep1
+	echo -e "
+	NAS-Identifier=OpenVpn
+	Service-Type=5
+	Framed-Protocol=1
+	NAS-Port-Type=5
+	NAS-IP-Address=$IP
+	OpenVPNConfig=/etc/openvpn/server.conf
+	subnet=255.255.255.0
+	overwriteccfiles=true
+	server
 	{
-		NAS-Identifier=OpenVpn
-		Service-Type=5
-		Framed-Protocol=1
-		NAS-Port-Type=5
-		NAS-IP-Address=$IP
-		OpenVPNConfig=/etc/openvpn/server.conf
-		subnet=255.255.255.0
-		overwriteccfiles=true
 		acctport=1813
 		authport=1812
 		name=$IPBS
