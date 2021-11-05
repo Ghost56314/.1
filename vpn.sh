@@ -1358,13 +1358,21 @@ elif [ $Selection -eq 2 ]
 then
 #installocs
   sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+  sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.248.0/g" /etc/ocserv/ocserv.conf #replace
   systemctl restart ocserv 
 elif [ $Selection -eq 3 ]
 then
 #installl2tp
   rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
+  thrdO=$(echo $ipv4 | cut -d '.' -f3)
+  thrdo=$(( $thrdO + 1 ))
+  firstRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10/g')
+  SecondRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+\.\S+$/\1\.'"$thrdo"'\.250/g')
   sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
-  systemctl restart xl2tpd ipsec
+
+  sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
+  sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
+  systemctl restart xl2tp ipsec
 elif [ $Selection -eq 4 ]
 then
 #installpptp
@@ -2205,10 +2213,13 @@ radiusConfig
 function installpptp(){
 echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
+#echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+#echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+#iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
 systemctl start pptpd
 radiusConfig
