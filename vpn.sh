@@ -1386,7 +1386,6 @@ function radiusConfig(){
 		cd freeradius-client
 		./configure --prefix=/
 		sudo make && sudo make install
-		cp /usr/share/doc/openvpn-auth-radius/examples/radiusplugin.cnf /usr/lib/openvpn/radiusplugin.cnf
     fi
 	
     packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
@@ -1491,6 +1490,14 @@ function radiusConfig(){
           
 	echo -e "server
 	{
+		NAS-Identifier=OpenVpn
+		Service-Type=5
+		Framed-Protocol=1
+		NAS-Port-Type=5
+		NAS-IP-Address=$IP
+		OpenVPNConfig=/etc/openvpn/server.conf
+		subnet=255.255.255.0
+		overwriteccfiles=true
 		acctport=1813
 		authport=1812
 		name=$IPBS
