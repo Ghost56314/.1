@@ -1353,15 +1353,18 @@ read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
 if [ $Selection -eq 1 ]
 then
         sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\0$ipv4 255.255.248.0/g" /etc/openvpn/server.conf #replace
+	systemctl restart openvpn
 elif [ $Selection -eq 2 ]
 then
 #installocs
   sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+  systemctl restart ocserv 
 elif [ $Selection -eq 3 ]
 then
 #installl2tp
   rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
   sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
+  systemctl restart xl2tp ipsec
 elif [ $Selection -eq 4 ]
 then
 #installpptp
@@ -1369,6 +1372,7 @@ then
   remoteip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
   echo -e "localip $localip" >> /etc/pptpd.conf #replace
   echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
+  systemctl restart pptpd
 fi
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE
