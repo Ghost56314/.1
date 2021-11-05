@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 function installopenvpn(){  
     	function isRoot() {
@@ -1351,27 +1352,27 @@ function PrivateAddress(){
 read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
 if [ $Selection -eq 1 ]
 then
-        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
+        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\0$ipv4 255.255.248.0/g" /etc/openvpn/server.conf #replace
 elif [ $Selection -eq 2 ]
 then
-  #installocs
+#installocs
   sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
 elif [ $Selection -eq 3 ]
 then
-  #installl2tp
+#installl2tp
   rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
   sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
 elif [ $Selection -eq 4 ]
 then
-  #installpptp
+#installpptp
   localip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.1/g')
   remoteip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
   echo -e "localip $localip" >> /etc/pptpd.conf #replace
   echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
 fi
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+iptables -t nat -A POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 }
 function radiusConfig(){
 
@@ -1488,7 +1489,7 @@ function radiusConfig(){
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
-	  sleep1
+	  sleep 1
 	echo -e "
 	NAS-Identifier=OpenVpn
 	Service-Type=5
@@ -2175,8 +2176,8 @@ echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\np
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
-iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
+#echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
+#iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
 systemctl enable pptpd
 systemctl start pptpd
 radiusConfig
