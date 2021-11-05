@@ -1383,7 +1383,7 @@ function checkans(){
 	do
         echo "Correct your answer! Do you have another RAS IP?[y/n]"
         read ans
-		if [ "$ans" = "y" ];then
+		if [ "$ans" = "y" ] || [ "$ans" = "n" ];then
 			g=1
 		fi
 	done
@@ -1522,7 +1522,7 @@ function radiusConfig(){
 	overwriteccfiles=true
 	server
 	{
-		acctport=18131
+		acctport=1813
 		authport=1812
 		name=$IPBS
 		retry=1
@@ -1541,49 +1541,56 @@ function radiusConfig(){
 
 PrivateAddress # call thos function for replace private address in its files and set iptables		
 }
-# function edit(){
-	# clear
-	# cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
-	# #f=0
-	# #while [ $f -eq 0 ]
-	# until [[ $ans =~ ^[y|n]+$ ]]; 
-	# do
-        # echo "Do you have another RAS IP?[y/n]"
-        # read ans
-        # if [ "$ans" = "y" ]
-        # then
-          # clear
-    	  # read -rp "Please Enter IBSng IP Address: " -e IPBS
-          # read -rp "Please Enter SecurePass: " -e secpass
-          # sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
-          # sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
-	  	  # echo -e "
-	# NAS-Identifier=OpenVpn
-	# Service-Type=5
-	# Framed-Protocol=1
-	# NAS-Port-Type=5
-	# NAS-IP-Address=$IP
-	# OpenVPNConfig=/etc/openvpn/server.conf
-	# subnet=255.255.255.0
-	# overwriteccfiles=true
-# server
-# {
-        # acctport=1813
-        # authport=1812
-        # name=$IPBS
-        # retry=1
-        # wait=1
-        # sharedsecret=$secpass
-# }
-				 # " >> /usr/lib/openvpn/radiusplugin.cnf
-	# systemctl restart openvpn
-		# elif [ "$ans" = "n" ]; then
-			# f=1
-		# else
-			# checkans
-		# fi
-	# done
-# }
+ function edit(){
+	clear
+	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
+	f=0
+	g=0
+	while [ $f -eq 0 ];do
+		if [ "$g" = 0 ]; then
+		echo "Do you have another RAS IP?[y/n]"
+        read ans
+		fi
+
+        if [ "$ans" = "y" ]
+	
+        then
+          read -rp "Please Enter IBSng IP Address: " IPBS
+          read -rp "Please Enter SecurePass: " secpass
+		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+          sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
+          sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
+          echo "Add Successfully"
+		sleep 1
+		echo -e "
+	NAS-Identifier=OpenVpn
+	Service-Type=5
+	Framed-Protocol=1
+	NAS-Port-Type=5
+	NAS-IP-Address=$IP
+	OpenVPNConfig=/etc/openvpn/server.conf
+	subnet=255.255.255.0
+	overwriteccfiles=true
+	server
+	{
+		acctport=1813
+		authport=1812
+		name=$IPBS
+		retry=1
+		wait=1
+		sharedsecret=$secpass
+	}" >> /usr/lib/openvpn/radiusplugin.cnf
+		systemctl restart openvpn
+		g=0
+		elif [ "$ans" = "n" ]; then
+			 f=1
+		else
+			 checkans
+		fi
+        
+	done
+
+}
 function installocs(){
 echo installing...
 apt update -qq ; apt install ocserv certbot -y
