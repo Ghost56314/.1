@@ -1352,7 +1352,7 @@ function PrivateAddress(){
 read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
 if [ $Selection -eq 1 ]
 then
-        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.248.0/g" /etc/openvpn/server.conf #replace
+        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
 	systemctl restart openvpn
 elif [ $Selection -eq 2 ]
 then
