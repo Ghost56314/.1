@@ -1358,7 +1358,7 @@ elif [ $Selection -eq 2 ]
 then
 #installocs
   sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
-  sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.248.0/g" /etc/ocserv/ocserv.conf #replace
+  sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf #replace
   systemctl restart ocserv 
 elif [ $Selection -eq 3 ]
 then
