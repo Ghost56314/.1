@@ -1374,9 +1374,10 @@ then
 
   #sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
   #sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
-  sed -i -r -E "s/(.*rightaddresspool=).*/\110.69.3.0/g" /etc/ipsec.conf #replace
-  sed -i -r -E "s/(ip range = ).*/\110.69.3.0/g" /etc/xl2tpd/xl2tpd.conf
-  sed -i -r -E "s/(.*local ip = ).*/\110.69.3.0/g" /etc/xl2tpd/xl2tpd.conf
+  local ip=$(echo 10.69.3.0 | sed -E  's/(.*)\.\S+$/\1\.1/g')
+  ip range=$(echo 10.69.3.0 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
+  echo -e "ip range $ip range" >> /etc/xl2tpd/xl2tpd.conf #replace
+  echo -e "local ip $local ip" >> /etc/xl2tpd/xl2tpd.conf #replace
   systemctl restart xl2tp ipsec
 elif [ $Selection -eq 4 ]
 then
