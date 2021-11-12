@@ -1374,10 +1374,6 @@ then
 
   #sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
   #sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
-  local_ip=$(echo 10.69.3.0 | sed -E  's/(.*)\.\S+$/\1\.1/g')
-  ip_range=$(echo 10.69.3.0 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
-  echo -e "ip range $ip_range" >> /etc/xl2tpd/xl2tpd.conf #replace
-  echo -e "local ip $local_ip" >> /etc/xl2tpd/xl2tpd.conf #replace
   systemctl restart xl2tp ipsec
 elif [ $Selection -eq 4 ]
 then
@@ -1886,11 +1882,11 @@ EOF
 create_vpn_config() {
   bigecho "Creating VPN configuration..."
 
-  L2TP_NET=${VPN_L2TP_NET:-'192.168.42.0/24'}
-  L2TP_LOCAL=${VPN_L2TP_LOCAL:-'192.168.42.1'}
-  L2TP_POOL=${VPN_L2TP_POOL:-'192.168.42.10-192.168.42.250'}
-  XAUTH_NET=${VPN_XAUTH_NET:-'192.168.43.0/24'}
-  XAUTH_POOL=${VPN_XAUTH_POOL:-'192.168.43.10-192.168.43.250'}
+  L2TP_NET=${VPN_L2TP_NET:-'10.69.3.0/24'}
+  L2TP_LOCAL=${VPN_L2TP_LOCAL:-'10.69.3.0.1'}
+  L2TP_POOL=${VPN_L2TP_POOL:-'10.69.3.0.10-10.69.3.0.250'}
+  XAUTH_NET=${VPN_XAUTH_NET:-'10.69.5.0.0/24'}
+  XAUTH_POOL=${VPN_XAUTH_POOL:-'10.69.5.10-10.69.5.250'}
   DNS_SRV1=${VPN_DNS_SRV1:-'8.8.8.8'}
   DNS_SRV2=${VPN_DNS_SRV2:-'8.8.4.4'}
   DNS_SRVS="\"$DNS_SRV1 $DNS_SRV2\""
