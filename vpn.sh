@@ -1374,7 +1374,9 @@ then
 
   #sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
   #sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
+  mkdir /etc/ipsec.d/
   systemctl restart xl2tp ipsec
+  systemctl restart ipsec.service
 elif [ $Selection -eq 4 ]
 then
 #installpptp
