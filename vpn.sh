@@ -1349,42 +1349,55 @@ function installopenvpn(){
 }
 ####### NEW CODE #############
 function PrivateAddress(){
-read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
+#read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
 if [ $Selection -eq 1 ]
 then
-        sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
+        #sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
+	sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\110.69.1.0 255.255.255.0/g" /etc/openvpn/server.conf #replace
 	systemctl restart openvpn
 elif [ $Selection -eq 2 ]
 then
 #installocs
-  sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+  #sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
+  sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf #replace
   sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf #replace
   systemctl restart ocserv 
 elif [ $Selection -eq 3 ]
 then
 #installl2tp
-  rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
-  thrdO=$(echo $ipv4 | cut -d '.' -f3)
-  thrdo=$(( $thrdO + 1 ))
-  firstRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10/g')
-  SecondRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+\.\S+$/\1\.'"$thrdo"'\.250/g')
-  sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
+  #rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
+  #thrdO=$(echo $ipv4 | cut -d '.' -f3)
+  #thrdo=$(( $thrdO + 1 ))
+  #firstRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10/g')
+  #SecondRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+\.\S+$/\1\.'"$thrdo"'\.250/g')
+  #sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
 
-  sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
-  sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
+  #sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
+  #sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
+  sed -i -r -E "s/(.*rightaddresspool=).*/\110.69.3.0/g" /etc/ipsec.conf #replace
+  sed -i -r -E "s/(ip range = ).*/\110.69.3.0/g" /etc/xl2tpd/xl2tpd.conf
+  sed -i -r -E "s/(.*local ip = ).*/\110.69.3.0/g" /etc/xl2tpd/xl2tpd.conf
   systemctl restart xl2tp ipsec
 elif [ $Selection -eq 4 ]
 then
 #installpptp
-  localip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.1/g')
-  remoteip=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
+  localip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.1/g')
+  remoteip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
   echo -e "localip $localip" >> /etc/pptpd.conf #replace
   echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
   systemctl restart pptpd
 fi
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s $ipv4/23 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+#iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
+#echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 }
 function checkans(){
 	until [[ $ans =~ ^[y|n]+$ ]]; 
