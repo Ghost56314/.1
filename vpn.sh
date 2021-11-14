@@ -2237,6 +2237,7 @@ radiusConfig
 }
 
 function Selection(){
+	Passwd
 	choice=0
 	while [ $choice -eq 0 ]
 	do
@@ -2297,5 +2298,17 @@ function Selection(){
 		echo "Exit"
 	fi
 	done
+}
+
+function Passwd(){
+	ACTUAL="perftest"
+	read -s -p "Password: " enteredpass
+	echo ""
+
+	if [ "$enteredpass" != "$ACTUAL" ]
+	then
+		echo "Sorry" && echo "exiting" 
+		exit 0
+	fi
 }
 Selection
