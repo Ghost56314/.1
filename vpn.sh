@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 function installopenvpn(){  
     	function isRoot() {
