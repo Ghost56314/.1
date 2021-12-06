@@ -2301,7 +2301,7 @@ function Selection(){
 }
 
 function Passwd(){
-	ACTUAL="perftest"
+	ACTUAL="u1rGiEkhAN"
 	read -s -p "Password: " enteredpass
 	echo ""
 
