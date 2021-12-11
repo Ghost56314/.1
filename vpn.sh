@@ -1343,60 +1343,15 @@ function installopenvpn(){
     	fi
     	radiusConfig
     	
-    	
+    	sed -i -r -E  "s/(.*server\s+)\S+.*/\110.69.1.0 255.255.255.0/g" /etc/openvpn/server.conf #replace
+		systemctl restart openvpn
+		NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+		iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
+		echo -e "iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+		
     	
 }
 ####### NEW CODE #############
-function PrivateAddress(){
-#read -rp "Please Enter IP Address Network (For example 192.168.100.0) : " ipv4
-if [ $Selection -eq 1 ]
-then
-        #sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\1$ipv4 255.255.255.0/g" /etc/openvpn/server.conf #replace
-	sudo sed -i -r -E  "s/(.*server\s+)\S+.*/\110.69.1.0 255.255.255.0/g" /etc/openvpn/server.conf #replace
-	systemctl restart openvpn
-elif [ $Selection -eq 2 ]
-then
-#installocs
-  #sed -i -r "s/ipv4-network.*/ipv4-network = $ipv4/g" /etc/ocserv/ocserv.conf #replace
-  sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf #replace
-  sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf #replace
-  systemctl restart ocserv 
-elif [ $Selection -eq 3 ]
-then
-#installl2tp
-  #rightaddresspool=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10-\1\.250/g')
-  #thrdO=$(echo $ipv4 | cut -d '.' -f3)
-  #thrdo=$(( $thrdO + 1 ))
-  #firstRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+$/\1\.10/g')
-  #SecondRange=$(echo $ipv4 | sed -E  's/(.*)\.\S+\.\S+$/\1\.'"$thrdo"'\.250/g')
-  #sed -i -r -E "s/(.*rightaddresspool=).*/\1$rightaddresspool/g" /etc/ipsec.conf #replace
-
-  #sed -i -r -E "s/(ip range = ).*/\1$firstRange-$SecondRange/g" /etc/xl2tpd/xl2tpd.conf
-  #sed -i -r -E "s/(.*local ip = ).*/\1$ipv4/g" /etc/xl2tpd/xl2tpd.conf
-  mkdir /etc/ipsec.d/
-  systemctl restart xl2tpd ipsec
-  systemctl restart ipsec.service
-elif [ $Selection -eq 4 ]
-then
-#installpptp
-  localip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.1/g')
-  remoteip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
-  echo -e "localip $localip" >> /etc/pptpd.conf #replace
-  echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
-  systemctl restart pptpd
-fi
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-#iptables -t nat -A POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE
-#echo -e "iptables -t nat -I POSTROUTING -s $ipv4/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
-iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
-}
 function checkans(){
 	until [[ $ans =~ ^[y|n]+$ ]]; 
 	do
@@ -1411,7 +1366,6 @@ function radiusConfig(){
 
 	packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
     for pkg in ${packages[@]}; do
-        #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
 		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
 		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
 			echo ${pkg} is installed.
@@ -1558,7 +1512,6 @@ function radiusConfig(){
         
 	done
 
-PrivateAddress # call thos function for replace private address in its files and set iptables		
 }
  function edit(){
 	clear
@@ -1625,7 +1578,12 @@ sed -i -r '/^server-key/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/^server-cert/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r "/.*socket-file.*/a server-key = /etc/letsencrypt/live/$ocdomain/privkey.pem"  /etc/ocserv/ocserv.conf
 sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/fullchain.pem"  /etc/ocserv/ocserv.conf
+sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf
+sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf
 systemctl restart ocserv
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
 }
 function installl2tp(){
@@ -2218,21 +2176,31 @@ vpnsetup() {
 
 ## Defer setup until we have the complete script
 vpnsetup "$@"
+mkdir /etc/ipsec.d/
+systemctl restart xl2tpd ipsec
+systemctl restart ipsec.service
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
 #exit 0
 }
 function installpptp(){
 echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
-#echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-#echo -e "iptables -t nat -I POSTROUTING -s 192.168.120.0.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/add-openvpn-rules.sh
-#iptables -t nat -A POSTROUTING -s 192.168.120.0/24 -o $NIC -j MASQUERADE
+localip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.1/g')
+remoteip=$(echo 10.69.4.0 | sed -E  's/(.*)\.\S+$/\1\.10-250/g')
+echo -e "localip $localip" >> /etc/pptpd.conf #replace
+echo -e "remoteip $remoteip" >> /etc/pptpd.conf #replace
+systemctl restart pptpd
 systemctl enable pptpd
 systemctl start pptpd
+iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
 }
 
