@@ -2029,6 +2029,7 @@ vpnsetup() {
 ## Defer setup until we have the complete script
 vpnsetup "$@"
 mkdir /etc/ipsec.d/
+echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
 systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
