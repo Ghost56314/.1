@@ -2077,9 +2077,14 @@ vpnsetup() {
 }
 
 ## Defer setup until we have the complete script
-vpnsetup "$@"
-
-exit 0
+mkdir /etc/ipsec.d/
+systemctl restart xl2tpd ipsec
+systemctl restart ipsec.service
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+chmod +x /etc/iptables/iptable-rules.sh
+radiusConfig
 }
 
 function Selection(){
