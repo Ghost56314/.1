@@ -1989,7 +1989,6 @@ EOF
       conf_bk "$IPT_FILE2"
       /bin/cp -f "$IPT_FILE" "$IPT_FILE2"
     fi
-  fi
 }
 start_services() {
   bigecho "Starting services..."
