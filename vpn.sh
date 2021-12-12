@@ -1514,7 +1514,7 @@ function radiusConfig(){
 	done
 
 }
- function edit(){
+function edit(){
 	clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
@@ -1985,10 +1985,6 @@ net.ipv4.tcp_wmem = 10240 87380 12582912
 EOF
   fi
 }
-    if [ -f "$IPT_FILE2" ]; then
-      conf_bk "$IPT_FILE2"
-      /bin/cp -f "$IPT_FILE" "$IPT_FILE2"
-    fi
 }
 start_services() {
   bigecho "Starting services..."
@@ -2080,6 +2076,7 @@ systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+chmod +x /etc/iptables/iptable-rules.sh
 radiusConfig
 #exit 0
 }
