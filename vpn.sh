@@ -1101,7 +1101,7 @@ function installopenvpn(){
     		elif [ "${SUDO_USER}" ]; then
     			# if not, use SUDO_USER
     			if [ "${SUDO_USER}" == "root" ]; then
-    				# If running sudo as root
+    				# If running  as root
     				homeDir="/root"
     			else
     				homeDir="/home/${SUDO_USER}"
@@ -1347,7 +1347,8 @@ function installopenvpn(){
 		systemctl restart openvpn
 		NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 		iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
-		echo -e "iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+		echo -e "iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+		chmod +x /etc/iptables/iptable-rules.sh
 		
     	
 }
@@ -1366,12 +1367,12 @@ function radiusConfig(){
 
 	packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
     for pkg in ${packages[@]}; do
-		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
+		is_pkg_installed=$( dpkg -s  ${pkg} | grep "install ok installed" )
 		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
 			echo ${pkg} is installed.
 
         else
-            sudo apt install   ${pkg} -y
+             apt install   ${pkg} -y
 		fi
 	done
 	
@@ -1379,13 +1380,13 @@ function radiusConfig(){
 	if test -f "$freeradius"; then
         echo freeradius is installed.
     else
-		sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-		sudo unzip master.zip
-		sudo mv freeradius-client-master freeradius-client
+		 wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
+		 unzip master.zip
+		 mv freeradius-client-master freeradius-client
 		cd freeradius-client
 		./configure --prefix=/
-		sudo make && sudo make install
-		sudo touch /etc/radiusclient/dictionary.microsoft 
+		 make &&  make install
+		 touch /etc/radiusclient/dictionary.microsoft 
 			echo "VENDOR          Microsoft       311     Microsoft
 			BEGIN VENDOR    Microsoft
 			ATTRIBUTE       MS-CHAP-Response        1       string  Microsoft
@@ -1436,18 +1437,18 @@ function radiusConfig(){
 			VALUE           MS-Acct-EAP-Type        OTP             5
 			VALUE           MS-Acct-EAP-Type        Generic-Token-Card      6
 			VALUE           MS-Acct-EAP-Type        TLS             13" >> /etc/radiusclient/dictionary.microsoft
-			sudo  sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
-			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
-			sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
+			  sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
+			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
+			 sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
 			echo "
 			duplicate-cn
 			management 0.0.0.0 7506
@@ -1462,9 +1463,9 @@ function radiusConfig(){
 
     
 
-	sudo sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
-	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
-	sudo clear
+	 sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
+	 sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
+	 clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	g=0
@@ -1479,7 +1480,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
-		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+		  echo "$IPBS	$secpass" |  tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
@@ -1529,7 +1530,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
-		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+		  echo "$IPBS	$secpass" |  tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
@@ -1583,7 +1584,8 @@ sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.c
 systemctl restart ocserv
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+chmod +x /etc/iptables/iptable-rules.sh
 radiusConfig
 }
 function installl2tp(){
@@ -1608,7 +1610,7 @@ check_ip() {
 
 check_root() {
   if [ "$(id -u)" != 0 ]; then
-    exiterr "Script must be run as root. Try 'sudo bash $0'"
+    exiterr "Script must be run as root. Try ' bash $0'"
   fi
 }
 
@@ -1983,119 +1985,16 @@ net.ipv4.tcp_wmem = 10240 87380 12582912
 EOF
   fi
 }
-
-update_iptables() {
-  bigecho "Updating IPTables rules..."
-  IPT_FILE=/etc/iptables.rules
-  IPT_FILE2=/etc/iptables/rules.v4
-  ipt_flag=0
-  if ! grep -qs "hwdsl2 VPN script" "$IPT_FILE"; then
-    ipt_flag=1
-  fi
-
-  ipi='iptables -I INPUT'
-  ipf='iptables -I FORWARD'
-  ipp='iptables -t nat -I POSTROUTING'
-  res='RELATED,ESTABLISHED'
-  if [ "$ipt_flag" = "1" ]; then
-    service fail2ban stop >/dev/null 2>&1
-    iptables-save > "$IPT_FILE.old-$SYS_DT"
-    $ipi 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
-    $ipi 2 -m conntrack --ctstate INVALID -j DROP
-    $ipi 3 -m conntrack --ctstate "$res" -j ACCEPT
-    $ipi 4 -p udp -m multiport --dports 500,4500 -j ACCEPT
-    $ipi 5 -p udp --dport 1701 -m policy --dir in --pol ipsec -j ACCEPT
-    $ipi 6 -p udp --dport 1701 -j DROP
-    $ipf 1 -m conntrack --ctstate INVALID -j DROP
-    $ipf 2 -i "$NET_IFACE" -o ppp+ -m conntrack --ctstate "$res" -j ACCEPT
-    $ipf 3 -i ppp+ -o "$NET_IFACE" -j ACCEPT
-    $ipf 4 -i ppp+ -o ppp+ -j ACCEPT
-    $ipf 5 -i "$NET_IFACE" -d "$XAUTH_NET" -m conntrack --ctstate "$res" -j ACCEPT
-    $ipf 6 -s "$XAUTH_NET" -o "$NET_IFACE" -j ACCEPT
-    $ipf 7 -s "$XAUTH_NET" -o ppp+ -j ACCEPT
-    iptables -A FORWARD -j DROP
-    $ipp -s "$XAUTH_NET" -o "$NET_IFACE" -m policy --dir out --pol none -j MASQUERADE
-    $ipp -s "$L2TP_NET" -o "$NET_IFACE" -j MASQUERADE
-    echo "# Modified by hwdsl2 VPN script" > "$IPT_FILE"
-    iptables-save >> "$IPT_FILE"
-
     if [ -f "$IPT_FILE2" ]; then
       conf_bk "$IPT_FILE2"
       /bin/cp -f "$IPT_FILE" "$IPT_FILE2"
     fi
   fi
 }
-
-enable_on_boot() {
-  bigecho "Enabling services on boot..."
-  IPT_PST=/etc/init.d/iptables-persistent
-  IPT_PST2=/usr/share/netfilter-persistent/plugins.d/15-ip4tables
-  ipt_load=1
-  if [ -f "$IPT_FILE2" ] && { [ -f "$IPT_PST" ] || [ -f "$IPT_PST2" ]; }; then
-    ipt_load=0
-  fi
-
-  if [ "$ipt_load" = "1" ]; then
-    mkdir -p /etc/network/if-pre-up.d
-cat > /etc/network/if-pre-up.d/iptablesload <<'EOF'
-#!/bin/sh
-iptables-restore < /etc/iptables.rules
-exit 0
-EOF
-    chmod +x /etc/network/if-pre-up.d/iptablesload
-
-    if [ -f /usr/sbin/netplan ]; then
-      mkdir -p /etc/systemd/system
-cat > /etc/systemd/system/load-iptables-rules.service <<'EOF'
-[Unit]
-Description = Load /etc/iptables.rules
-DefaultDependencies=no
-
-Before=network-pre.target
-Wants=network-pre.target
-
-Wants=systemd-modules-load.service local-fs.target
-After=systemd-modules-load.service local-fs.target
-
-[Service]
-Type=oneshot
-ExecStart=/etc/network/if-pre-up.d/iptablesload
-
-[Install]
-WantedBy=multi-user.target
-EOF
-      systemctl enable load-iptables-rules 2>/dev/null
-    fi
-  fi
-
-  for svc in fail2ban ipsec xl2tpd; do
-    update-rc.d "$svc" enable >/dev/null 2>&1
-    systemctl enable "$svc" 2>/dev/null
-  done
-
-  if ! grep -qs "hwdsl2 VPN script" /etc/rc.local; then
-    if [ -f /etc/rc.local ]; then
-      conf_bk "/etc/rc.local"
-      sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
-    else
-      echo '#!/bin/sh' > /etc/rc.local
-    fi
-cat >> /etc/rc.local <<'EOF'
-
-# Added by hwdsl2 VPN script
-(sleep 15
-service ipsec restart
-service xl2tpd restart
-echo 1 > /proc/sys/net/ipv4/ip_forward)&
-exit 0
-EOF
-  fi
-}
-
 start_services() {
   bigecho "Starting services..."
   sysctl -e -q -p
-  echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
+  echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/options.xl2tpd
   chmod +x /etc/rc.local
   mkdir -p /run/pluto
   service fail2ban restart 2>/dev/null
@@ -2137,7 +2036,7 @@ check_swan_ver() {
 cat <<EOF
 Note: A newer version of Libreswan ($swan_ver_latest) is available.
       To update, run:
-      wget https://git.io/vpnupgrade -O vpnup.sh && sudo sh vpnup.sh
+      wget https://git.io/vpnupgrade -O vpnup.sh &&  sh vpnup.sh
 
 EOF
   fi
@@ -2181,14 +2080,14 @@ systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
 #exit 0
 }
 function installpptp(){
 echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
-echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
+echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
@@ -2200,7 +2099,8 @@ systemctl restart pptpd
 systemctl enable pptpd
 systemctl start pptpd
 iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" | sudo tee -a /etc/iptables/iptable-rules.sh
+echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+chmod +x /etc/iptables/iptable-rules.sh
 radiusConfig
 }
 
