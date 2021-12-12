@@ -1592,7 +1592,6 @@ function installl2tp(){
 #!/bin/bash
 read -rp "Please Enter IPSec_PSK: " YOUR_IPSEC_PSK
 YOUR_IPSEC_PSK=$YOUR_IPSEC_PSK
-# =====================================================
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 SYS_DT=$(date +%F-%T | tr ':' '_')
@@ -1605,7 +1604,6 @@ bigecho() { echo "## $1"; }
 check_ip() {
   IP_REGEX='^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
   printf '%s' "$1" | tr -d '\n' | grep -Eq "$IP_REGEX"
-
 }
 
 check_root() {
@@ -1857,11 +1855,9 @@ create_vpn_config() {
   conf_bk "/etc/ipsec.conf"
 cat > /etc/ipsec.conf <<EOF
 version 2.0
-
 config setup
   virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
   uniqueids=no
-
 conn shared
   left=%defaultroute
   leftid=$public_ip
@@ -1880,14 +1876,12 @@ conn shared
   ikelifetime=24h
   salifetime=24h
   sha2-truncbug=no
-
 conn l2tp-psk
   auto=add
   leftprotoport=17/1701
   rightprotoport=17/%any
   type=transport
   also=shared
-
 conn xauth-psk
   auto=add
   leftsubnet=0.0.0.0/0
@@ -1900,7 +1894,6 @@ conn xauth-psk
   modecfgpull=yes
   cisco-unity=yes
   also=shared
-
 include /etc/ipsec.d/*.conf
 EOF
 
@@ -1921,7 +1914,6 @@ EOF
 cat > /etc/xl2tpd/xl2tpd.conf <<EOF
 [global]
 port = 1701
-
 [lns default]
 ip range = $L2TP_POOL
 local ip = $L2TP_LOCAL
@@ -1955,19 +1947,28 @@ cat >> /etc/ppp/options.xl2tpd <<EOF
 ms-dns $DNS_SRV2
 EOF
   fi
-}
 
+  # Create VPN credentials
+  conf_bk "/etc/ppp/chap-secrets"
+cat > /etc/ppp/chap-secrets <<EOF
+"$VPN_USER" l2tpd "$VPN_PASSWORD" *
+EOF
+
+  conf_bk "/etc/ipsec.d/passwd"
+  VPN_PASSWORD_ENC=$(openssl passwd -1 "$VPN_PASSWORD")
+cat > /etc/ipsec.d/passwd <<EOF
+$VPN_USER:$VPN_PASSWORD_ENC:xauth-psk
+EOF
+}
 
 update_sysctl() {
   bigecho "Updating sysctl settings..."
   if ! grep -qs "hwdsl2 VPN script" /etc/sysctl.conf; then
     conf_bk "/etc/sysctl.conf"
 cat >> /etc/sysctl.conf <<EOF
-
 # Added by hwdsl2 VPN script
 kernel.msgmnb = 65536
 kernel.msgmax = 65536
-
 net.ipv4.ip_forward = 1
 net.ipv4.conf.all.accept_redirects = 0
 net.ipv4.conf.all.send_redirects = 0
@@ -1977,7 +1978,6 @@ net.ipv4.conf.default.send_redirects = 0
 net.ipv4.conf.default.rp_filter = 0
 net.ipv4.conf.$NET_IFACE.send_redirects = 0
 net.ipv4.conf.$NET_IFACE.rp_filter = 0
-
 net.core.wmem_max = 12582912
 net.core.rmem_max = 12582912
 net.ipv4.tcp_rmem = 10240 87380 12582912
@@ -1986,15 +1986,144 @@ EOF
   fi
 }
 
+update_iptables() {
+  bigecho "Updating IPTables rules..."
+  IPT_FILE=/etc/iptables.rules
+  IPT_FILE2=/etc/iptables/rules.v4
+  ipt_flag=0
+  if ! grep -qs "hwdsl2 VPN script" "$IPT_FILE"; then
+    ipt_flag=1
+  fi
+
+  ipi='iptables -I INPUT'
+  ipf='iptables -I FORWARD'
+  ipp='iptables -t nat -I POSTROUTING'
+  res='RELATED,ESTABLISHED'
+  if [ "$ipt_flag" = "1" ]; then
+    service fail2ban stop >/dev/null 2>&1
+    iptables-save > "$IPT_FILE.old-$SYS_DT"
+    $ipi 1 -p udp --dport 1701 -m policy --dir in --pol none -j DROP
+    $ipi 2 -m conntrack --ctstate INVALID -j DROP
+    $ipi 3 -m conntrack --ctstate "$res" -j ACCEPT
+    $ipi 4 -p udp -m multiport --dports 500,4500 -j ACCEPT
+    $ipi 5 -p udp --dport 1701 -m policy --dir in --pol ipsec -j ACCEPT
+    $ipi 6 -p udp --dport 1701 -j DROP
+    $ipf 1 -m conntrack --ctstate INVALID -j DROP
+    $ipf 2 -i "$NET_IFACE" -o ppp+ -m conntrack --ctstate "$res" -j ACCEPT
+    $ipf 3 -i ppp+ -o "$NET_IFACE" -j ACCEPT
+    $ipf 4 -i ppp+ -o ppp+ -j ACCEPT
+    $ipf 5 -i "$NET_IFACE" -d "$XAUTH_NET" -m conntrack --ctstate "$res" -j ACCEPT
+    $ipf 6 -s "$XAUTH_NET" -o "$NET_IFACE" -j ACCEPT
+    $ipf 7 -s "$XAUTH_NET" -o ppp+ -j ACCEPT
+    iptables -A FORWARD -j DROP
+    $ipp -s "$XAUTH_NET" -o "$NET_IFACE" -m policy --dir out --pol none -j MASQUERADE
+    $ipp -s "$L2TP_NET" -o "$NET_IFACE" -j MASQUERADE
+    echo "# Modified by hwdsl2 VPN script" > "$IPT_FILE"
+    iptables-save >> "$IPT_FILE"
+
+    if [ -f "$IPT_FILE2" ]; then
+      conf_bk "$IPT_FILE2"
+      /bin/cp -f "$IPT_FILE" "$IPT_FILE2"
+    fi
+  fi
+}
+
+enable_on_boot() {
+  bigecho "Enabling services on boot..."
+  IPT_PST=/etc/init.d/iptables-persistent
+  IPT_PST2=/usr/share/netfilter-persistent/plugins.d/15-ip4tables
+  ipt_load=1
+  if [ -f "$IPT_FILE2" ] && { [ -f "$IPT_PST" ] || [ -f "$IPT_PST2" ]; }; then
+    ipt_load=0
+  fi
+
+  if [ "$ipt_load" = "1" ]; then
+    mkdir -p /etc/network/if-pre-up.d
+cat > /etc/network/if-pre-up.d/iptablesload <<'EOF'
+#!/bin/sh
+iptables-restore < /etc/iptables.rules
+exit 0
+EOF
+    chmod +x /etc/network/if-pre-up.d/iptablesload
+
+    if [ -f /usr/sbin/netplan ]; then
+      mkdir -p /etc/systemd/system
+cat > /etc/systemd/system/load-iptables-rules.service <<'EOF'
+[Unit]
+Description = Load /etc/iptables.rules
+DefaultDependencies=no
+Before=network-pre.target
+Wants=network-pre.target
+Wants=systemd-modules-load.service local-fs.target
+After=systemd-modules-load.service local-fs.target
+[Service]
+Type=oneshot
+ExecStart=/etc/network/if-pre-up.d/iptablesload
+[Install]
+WantedBy=multi-user.target
+EOF
+      systemctl enable load-iptables-rules 2>/dev/null
+    fi
+  fi
+
+  for svc in fail2ban ipsec xl2tpd; do
+    update-rc.d "$svc" enable >/dev/null 2>&1
+    systemctl enable "$svc" 2>/dev/null
+  done
+
+  if ! grep -qs "hwdsl2 VPN script" /etc/rc.local; then
+    if [ -f /etc/rc.local ]; then
+      conf_bk "/etc/rc.local"
+      sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
+    else
+      echo '#!/bin/sh' > /etc/rc.local
+    fi
+cat >> /etc/rc.local <<'EOF'
+# Added by hwdsl2 VPN script
+(sleep 15
+service ipsec restart
+service xl2tpd restart
+echo 1 > /proc/sys/net/ipv4/ip_forward)&
+exit 0
+EOF
+  fi
+}
+
 start_services() {
   bigecho "Starting services..."
   sysctl -e -q -p
-  echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
+
   chmod +x /etc/rc.local
+  chmod 600 /etc/ipsec.secrets* /etc/ppp/chap-secrets* /etc/ipsec.d/passwd*
+
   mkdir -p /run/pluto
   service fail2ban restart 2>/dev/null
   service ipsec restart 2>/dev/null
   service xl2tpd restart 2>/dev/null
+}
+
+show_vpn_info() {
+cat <<EOF
+================================================
+IPsec VPN server is now ready for use!
+Connect to your new VPN with these details:
+Server IP: $public_ip
+IPsec PSK: $VPN_IPSEC_PSK
+Username: $VPN_USER
+Password: $VPN_PASSWORD
+Write these down. You'll need them to connect!
+Important notes:   https://git.io/vpnnotes
+Setup VPN clients: https://git.io/vpnclients
+IKEv2 guide:       https://git.io/ikev2
+================================================
+EOF
+  if [ ! -e /dev/ppp ]; then
+cat <<'EOF'
+Warning: /dev/ppp is missing, and IPsec/L2TP mode may not work. Please use
+         IKEv2 (https://git.io/ikev2) or IPsec/XAuth mode to connect.
+         Debian 11/10 users, see https://git.io/vpndebian10
+EOF
+  fi
 }
 
 check_swan_ver() {
@@ -2008,7 +2137,6 @@ cat <<EOF
 Note: A newer version of Libreswan ($swan_ver_latest) is available.
       To update, run:
       wget https://git.io/vpnupgrade -O vpnup.sh && sudo sh vpnup.sh
-
 EOF
   fi
 }
@@ -2038,19 +2166,20 @@ vpnsetup() {
   install_libreswan
   create_vpn_config
   update_sysctl
+  update_iptables
+  enable_on_boot
   start_services
+  show_vpn_info
 }
-
 ## Defer setup until we have the complete script
-
-mkdir /etc/ipsec.d/
-systemctl restart xl2tpd ipsec
-systemctl restart ipsec.service
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
-chmod +x /etc/iptables/iptable-rules.sh
-radiusConfig
+#mkdir /etc/ipsec.d/
+#systemctl restart xl2tpd ipsec
+#systemctl restart ipsec.service
+#NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+#iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+#echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
+#chmod +x /etc/iptables/iptable-rules.sh
+#radiusConfig
 }
 
 function Selection(){
