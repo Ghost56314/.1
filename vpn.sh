@@ -2028,12 +2028,7 @@ check_swan_ver() {
   if printf '%s' "$swan_ver_latest" | grep -Eq '^([3-9]|[1-9][0-9]{1,2})(\.([0-9]|[1-9][0-9]{1,2})){1,2}$' \
     && [ "$1" = "0" ] && [ -n "$SWAN_VER" ] && [ "$SWAN_VER" != "$swan_ver_latest" ] \
     && printf '%s\n%s' "$SWAN_VER" "$swan_ver_latest" | sort -C -V; then
-cat <<EOF
-Note: A newer version of Libreswan ($swan_ver_latest) is available.
-      To update, run:
-      wget https://git.io/vpnupgrade -O vpnup.sh &&  sh vpnup.sh
-
-EOF
+  sleep 0
   fi
 }
 
