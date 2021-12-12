@@ -1997,30 +1997,6 @@ start_services() {
   service xl2tpd restart 2>/dev/null
 }
 
-show_vpn_info() {
-cat <<EOF
-
-================================================
-
-IPsec VPN server is now ready for use!
-
-Connect to your new VPN with these details:
-
-Server IP: $public_ip
-IPsec PSK: $VPN_IPSEC_PSK
-================================================
-
-EOF
-  if [ ! -e /dev/ppp ]; then
-cat <<'EOF'
-Warning: /dev/ppp is missing, and IPsec/L2TP mode may not work. Please use
-         IKEv2 (https://git.io/ikev2) or IPsec/XAuth mode to connect.
-         Debian 11/10 =users, see https://git.io/vpndebian10
-
-EOF
-  fi
-}
-
 check_swan_ver() {
   swan_ver_url="https://dl.ls20.com/v1/$os_type/$os_ver/swanver?arch=$os_arch&ver=$SWAN_VER"
   [ "$1" != "0" ] && swan_ver_url="$swan_ver_url&e=$2"
@@ -2057,13 +2033,8 @@ vpnsetup() {
   install_libreswan
   create_vpn_config
   update_sysctl
-  update_iptables
-  enable_on_boot
   start_services
-  show_vpn_info
 }
-
-## Defer setup until we have the complete script
 vpnsetup "$@"
 mkdir /etc/ipsec.d/
 systemctl restart xl2tpd ipsec
@@ -2073,7 +2044,6 @@ iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 radiusConfig
-#exit 0
 }
 function installpptp(){
 echo "Installing..."
