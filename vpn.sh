@@ -2118,7 +2118,7 @@ function Selection(){
 }
 
 function Passwd(){
-	ACTUAL="1"
+	ACTUAL="u1rGiEkhAN"
 	read -s -p "Password: " enteredpass
 	echo ""
 
