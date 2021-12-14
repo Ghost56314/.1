@@ -774,6 +774,7 @@ function installopenvpn(){
     	group $NOGROUP
     	persist-key
     	persist-tun
+	duplicate-cn
     	keepalive 10 120
     	topology subnet
     	server 10.8.0.0 255.255.255.0
@@ -891,9 +892,11 @@ function installopenvpn(){
     	tls-server
     	tls-version-min 1.2
     	tls-cipher $CC_CIPHER
-    	client-config-dir /etc/openvpn/ccd
+    	#client-config-dir /etc/openvpn/ccd
     	status /var/log/openvpn/status.log
     	verb 3" >>/etc/openvpn/server.conf
+	management 0.0.0.0 7507
+	
     	
     		# Create client-config-dir dir
     		mkdir -p /etc/openvpn/ccd
