@@ -894,10 +894,9 @@ function installopenvpn(){
     	tls-cipher $CC_CIPHER
     	#client-config-dir /etc/openvpn/ccd
     	status /var/log/openvpn/status.log
-    	verb 3" >>/etc/openvpn/server.conf
-	management 0.0.0.0 7507
+    	verb 3
+	management 0.0.0.0 7507" >>/etc/openvpn/server.conf
 	
-    	
     		# Create client-config-dir dir
     		mkdir -p /etc/openvpn/ccd
     		# Create log dir
