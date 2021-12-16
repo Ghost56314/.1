@@ -1344,9 +1344,7 @@ function installopenvpn(){
     		installOpenVPN
     	fi
     	radiusConfig
-    	
-    	
-    	
+	systemctl restart openvpn
 }
 ####### NEW CODE #############
 function checkans(){
@@ -1584,6 +1582,7 @@ echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" |
 chmod +x /etc/iptables/iptable-rules.sh
 systemctl restart ocserv
 radiusConfig
+systemctl restart ocserv
 }
 function installl2tp(){
 #!/bin/bash
@@ -2039,6 +2038,7 @@ iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 radiusConfig
+systemctl restart xl2tpd
 }
 function installpptp(){
 echo "Installing..."
@@ -2054,6 +2054,7 @@ chmod +x /etc/iptables/iptable-rules.sh
 systemctl enable pptpd
 systemctl start pptpd
 radiusConfig
+systemctl restart pptpd
 }
 
 function Selection(){
