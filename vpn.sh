@@ -109,8 +109,8 @@ function installopenvpn(){
     				apt-get install -y unbound
     	
     				# Configuration
-    				echo 'interface: 10.8.0.1
-    	access-control: 10.8.0.1/24 allow
+    				echo 'interface: 10.69.1.1
+    	access-control: 10.69.1.1/24 allow
     	hide-identity: yes
     	hide-version: yes
     	use-caps-for-id: yes
@@ -120,8 +120,8 @@ function installopenvpn(){
     				yum install -y unbound
     	
     				# Configuration
-    				sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-    				sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+    				sed -i 's|# interface: 0.0.0.0$|interface: 10.69.1.1|' /etc/unbound/unbound.conf
+    				sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.69.1.1/24 allow|' /etc/unbound/unbound.conf
     				sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
     				sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
     				sed -i 's|use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
@@ -130,8 +130,8 @@ function installopenvpn(){
     				dnf install -y unbound
     	
     				# Configuration
-    				sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-    				sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+    				sed -i 's|# interface: 0.0.0.0$|interface: 10.69.1.1|' /etc/unbound/unbound.conf
+    				sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.69.1.1/24 allow|' /etc/unbound/unbound.conf
     				sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
     				sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
     				sed -i 's|# use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
@@ -153,8 +153,8 @@ function installopenvpn(){
     		directory: "/etc/unbound"
     		trust-anchor-file: trusted-key.key
     		root-hints: root.hints
-    		interface: 10.8.0.1
-    		access-control: 10.8.0.1/24 allow
+    		interface: 10.69.1.1
+    		access-control: 10.69.1.1/24 allow
     		port: 53
     		num-threads: 2
     		use-caps-for-id: yes
@@ -188,8 +188,8 @@ function installopenvpn(){
     	
     			# Add Unbound 'server' for the OpenVPN subnet
     			echo 'server:
-    	interface: 10.8.0.1
-    	access-control: 10.8.0.1/24 allow
+    	interface: 10.69.1.1
+    	access-control: 10.69.1.1/24 allow
     	hide-identity: yes
     	hide-version: yes
     	use-caps-for-id: yes
@@ -777,7 +777,7 @@ function installopenvpn(){
 	duplicate-cn
     	keepalive 10 120
     	topology subnet
-    	server 10.8.0.0 255.255.255.0
+    	server 10.69.1.0 255.255.255.0
     	ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
     	
     		# DNS resolvers
@@ -799,7 +799,7 @@ function installopenvpn(){
     			done
     			;;
     		2) # Self-hosted DNS resolver (Unbound)
-    			echo 'push "dhcp-option DNS 10.8.0.1"' >>/etc/openvpn/server.conf
+    			echo 'push "dhcp-option DNS 10.69.1.1"' >>/etc/openvpn/server.conf
     			if [[ $IPV6_SUPPORT == 'y' ]]; then
     				echo 'push "dhcp-option DNS fd42:42:42:42::1"' >>/etc/openvpn/server.conf
     			fi
@@ -964,7 +964,7 @@ function installopenvpn(){
     	
     		# Script to add rules
     		echo "#!/bin/sh
-    	iptables -t nat -I POSTROUTING 1 -s 10.8.0.0/24 -o $NIC -j MASQUERADE
+    	iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o $NIC -j MASQUERADE
     	iptables -I INPUT 1 -i tun0 -j ACCEPT
     	iptables -I FORWARD 1 -i $NIC -o tun0 -j ACCEPT
     	iptables -I FORWARD 1 -i tun0 -o $NIC -j ACCEPT
@@ -980,7 +980,7 @@ function installopenvpn(){
     	
     		# Script to remove rules
     		echo "#!/bin/sh
-    	iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o $NIC -j MASQUERADE
+    	iptables -t nat -D POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
     	iptables -D INPUT -i tun0 -j ACCEPT
     	iptables -D FORWARD -i $NIC -o tun0 -j ACCEPT
     	iptables -D FORWARD -i tun0 -o $NIC -j ACCEPT
@@ -1580,7 +1580,7 @@ sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf
 sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
-touch /etc/iptable-rules.sh
+touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 systemctl restart ocserv
@@ -2038,7 +2038,7 @@ systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
-touch /etc/iptable-rules.sh
+touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
@@ -2053,7 +2053,7 @@ echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
-touch /etc/iptable-rules.sh
+touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 systemctl enable pptpd
