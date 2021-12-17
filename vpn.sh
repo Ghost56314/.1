@@ -1103,7 +1103,7 @@ function installopenvpn(){
     		elif [ "${SUDO_USER}" ]; then
     			# if not, use SUDO_USER
     			if [ "${SUDO_USER}" == "root" ]; then
-    				# If running sudo as root
+    				# If running  as root
     				homeDir="/root"
     			else
     				homeDir="/home/${SUDO_USER}"
@@ -1362,12 +1362,12 @@ function radiusConfig(){
 	packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
     for pkg in ${packages[@]}; do
         #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
-		is_pkg_installed=$(sudo dpkg -s  ${pkg} | grep "install ok installed" )
+		is_pkg_installed=$( dpkg -s  ${pkg} | grep "install ok installed" )
 		if [[ "$is_pkg_installed" == *"install ok installed"* ]]; then
 			echo ${pkg} is installed.
 
         else
-            sudo apt install   ${pkg} -y
+             apt install   ${pkg} -y
 		fi
 	done
 	
@@ -1375,13 +1375,13 @@ function radiusConfig(){
 	if test -f "$freeradius"; then
         echo freeradius is installed.
     else
-		sudo wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-		sudo unzip master.zip
-		sudo mv freeradius-client-master freeradius-client
+		wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
+		unzip master.zip
+		mv freeradius-client-master freeradius-client
 		cd freeradius-client
 		./configure --prefix=/
-		sudo make && sudo make install
-		sudo touch /etc/radiusclient/dictionary.microsoft 
+		make && make install
+		touch /etc/radiusclient/dictionary.microsoft 
 			echo "VENDOR          Microsoft       311     Microsoft
 			BEGIN VENDOR    Microsoft
 			ATTRIBUTE       MS-CHAP-Response        1       string  Microsoft
@@ -1432,18 +1432,20 @@ function radiusConfig(){
 			VALUE           MS-Acct-EAP-Type        OTP             5
 			VALUE           MS-Acct-EAP-Type        Generic-Token-Card      6
 			VALUE           MS-Acct-EAP-Type        TLS             13" >> /etc/radiusclient/dictionary.microsoft
-			sudo  sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
-			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
-			sudo sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
-			sudo sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
+			  sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
+			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
+			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
+			 sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
+			sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
+			sysctl -p
 			echo "
 			duplicate-cn
 			management 0.0.0.0 7506
@@ -1458,9 +1460,9 @@ function radiusConfig(){
 
     
 
-	sudo sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
-	sudo sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
-	sudo clear
+	 sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
+	 sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
+	 clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
 	g=0
@@ -1475,7 +1477,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
-		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+		  echo "$IPBS	$secpass" |  tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
@@ -1525,7 +1527,7 @@ function radiusConfig(){
         then
           read -rp "Please Enter IBSng IP Address: " IPBS
           read -rp "Please Enter SecurePass: " secpass
-		  echo "$IPBS	$secpass" | sudo tee /etc/radiusclient/servers
+		  echo "$IPBS	$secpass" |  tee /etc/radiusclient/servers
           sed -i -r "/.*simply.*/a authserver   $IPBS"  /etc/radiusclient/radiusclient.conf
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
@@ -1606,7 +1608,7 @@ check_ip() {
 
 check_root() {
   if [ "$(id -u)" != 0 ]; then
-    exiterr "Script must be run as root. Try 'sudo bash $0'"
+    exiterr "Script must be run as root. Try ' bash $0'"
   fi
 }
 
@@ -1993,7 +1995,7 @@ check_swan_ver() {
 cat <<EOF
 Note: A newer version of Libreswan ($swan_ver_latest) is available.
       To update, run:
-      wget https://git.io/vpnupgrade -O vpnup.sh && sudo sh vpnup.sh
+      wget https://git.io/vpnupgrade -O vpnup.sh &&  sh vpnup.sh
 
 EOF
   fi
@@ -2030,7 +2032,7 @@ vpnsetup() {
 ## Defer setup until we have the complete script
 vpnsetup "$@"
 mkdir /etc/ipsec.d/
-echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/options.xl2tpd
+echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/options.xl2tpd
 systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
@@ -2043,8 +2045,8 @@ systemctl restart xl2tpd
 function installpptp(){
 echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
-#echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" | sudo tee -a /etc/pptpd.conf
-echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" | sudo tee -a /etc/ppp/pptpd-options
+#echo -e "localip 192.168.120.1\nremoteip 192.168.120.10-250" |  tee -a /etc/pptpd.conf
+echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
