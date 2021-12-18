@@ -1449,11 +1449,6 @@ function radiusConfig(){
 			status /var/log/openvpn/status-pa-ibs.log" >> /etc/openvpn/server.conf
 				systemctl restart openvpn
         fi
-    
-	
-
-
-    
 
 	 sed -e '/^acctserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
 	 sed -e '/^authserver.*localhost/s/^/#/' -i -r /etc/radiusclient/radiusclient.conf #comment
@@ -2044,6 +2039,7 @@ iptablesserv
 radiusConfig
 systemctl restart pptpd
 }
+
 function iptablesserv(){
 add-iptable-rules=/etc/iptables/add-iptable-rules.sh
 if test -f "$add-iptable-rules"; then
@@ -2077,6 +2073,7 @@ systemctl enable iptables-covernet
 systemctl start iptables-covernet
 sed -i -r '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf #uncomment
 sysctl -p
+fi
 }
 function Selection(){
 	Passwd
