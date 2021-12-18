@@ -1580,6 +1580,7 @@ sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf
 sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
+mkdir /etc/iptables/
 touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
@@ -2038,6 +2039,7 @@ systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+mkdir /etc/iptables/
 touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
@@ -2053,6 +2055,7 @@ echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
+mkdir /etc/iptables/
 touch /etc/iptables/iptable-rules.sh
 chmod +x /etc/iptables/iptable-rules.sh
 echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
