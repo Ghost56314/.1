@@ -215,9 +215,6 @@ access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
 }
 
 function installQuestions() {
-	echo "Welcome to the OpenVPN installer!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
-	echo ""
 
 	echo "I need to ask you a few questions before starting the setup."
 	echo "You can leave the default options and just press enter if you are ok with them."
@@ -382,7 +379,7 @@ function installQuestions() {
 	echo "Do you want to customize encryption settings?"
 	echo "Unless you know what you're doing, you should stick with the default parameters provided by the script."
 	echo "Note that whatever you choose, all the choices presented in the script are safe. (Unlike OpenVPN's defaults)"
-	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
+	echo "See #security-and-encryption to learn more."
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
 		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
@@ -1303,7 +1300,7 @@ function removeOpenVPN() {
 
 function manageMenu() {
 	echo "Welcome to OpenVPN-install!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
+	echo "The git repository is available at: "
 	echo ""
 	echo "It looks like OpenVPN is already installed."
 	echo ""
@@ -2048,6 +2045,10 @@ radiusConfig
 systemctl restart pptpd
 }
 function iptablesserv(){
+add-iptable-rules=/etc/iptables/add-iptable-rules.sh
+if test -f "$add-iptable-rules"; then
+echo iptables is configured.
+else
 NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
 iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
