@@ -1579,8 +1579,8 @@ sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/full
 sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf
 sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf
 systemctl restart ocserv
-radiusConfig
 iptablesserv
+radiusConfig
 systemctl restart ocserv
 }
 function installl2tp(){
@@ -2032,8 +2032,8 @@ mkdir /etc/ipsec.d/
 echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/options.xl2tpd
 systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
-radiusConfig
 iptablesserv
+radiusConfig
 systemctl restart xl2tpd
 }
 function installpptp(){
@@ -2045,8 +2045,8 @@ echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
 systemctl enable pptpd
 systemctl start pptpd
-radiusConfig
 iptablesserv
+radiusConfig
 systemctl restart pptpd
 }
 function iptablesserv(){
@@ -2063,19 +2063,21 @@ chmod +x /etc/iptables/rm-iptable-rules.sh
 echo -e "#!/bin/sh\n iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE\n" |  tee -a /etc/iptables/add-iptable-rules.sh
 echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
 echo "[Unit]
-  	Description=iptables rules for OpenVPN
+  	Description=iptables rules for Covernet
    	Before=network-online.target
    	Wants=network-online.target 	
     [Service]
     Type=oneshot
     ExecStart=/etc/iptables/add-iptable-rules.sh
-	ExecStop=/etc/iptables/rm-iptable-rules.sh
+    ExecStop=/etc/iptables/rm-iptable-rules.sh
     RemainAfterExit=yes
     [Install]
     WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
 systemctl daemon-reload
 systemctl enable iptables-covernet
 systemctl start iptables-covernet
+sed -i -r '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf #uncomment
+sysctl -p
 }
 function Selection(){
 	Passwd
