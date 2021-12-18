@@ -1578,14 +1578,9 @@ sed -i -r "/.*socket-file.*/a server-key = /etc/letsencrypt/live/$ocdomain/privk
 sed -i -r "/.*socket-file.*/a server-cert = /etc/letsencrypt/live/$ocdomain/fullchain.pem"  /etc/ocserv/ocserv.conf
 sed -i -r "s/ipv4-network.*/ipv4-network = 10.69.2.0/g" /etc/ocserv/ocserv.conf
 sed -i -r "s/ipv4-netmask.*/ipv4-netmask = 255.255.255.0/g" /etc/ocserv/ocserv.conf
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
-mkdir /etc/iptables/
-touch /etc/iptables/iptable-rules.sh
-chmod +x /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 systemctl restart ocserv
 radiusConfig
+iptablesserv
 systemctl restart ocserv
 }
 function installl2tp(){
@@ -2037,13 +2032,8 @@ mkdir /etc/ipsec.d/
 echo -e "plugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/options.xl2tpd
 systemctl restart xl2tpd ipsec
 systemctl restart ipsec.service
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
-mkdir /etc/iptables/
-touch /etc/iptables/iptable-rules.sh
-chmod +x /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 radiusConfig
+iptablesserv
 systemctl restart xl2tpd
 }
 function installpptp(){
@@ -2053,18 +2043,40 @@ apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
 echo -e "ms-dns 8.8.8.8\nms-dns 9.9.9.9\nplugin /usr/lib/pppd/2.4.7/radius.so\nplugin /usr/lib/pppd/2.4.7/radattr.so" |  tee -a /etc/ppp/pptpd-options
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-openvpn.conf
 sysctl --system
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
-mkdir /etc/iptables/
-touch /etc/iptables/iptable-rules.sh
-chmod +x /etc/iptables/iptable-rules.sh
-echo -e "iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE" |  tee -a /etc/iptables/iptable-rules.sh
 systemctl enable pptpd
 systemctl start pptpd
 radiusConfig
+iptablesserv
 systemctl restart pptpd
 }
-
+function iptablesserv(){
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE
+mkdir /etc/iptables/
+touch /etc/iptables/add-iptable-rules.sh
+touch /etc/iptables/rm-iptable-rules.sh
+chmod +x /etc/iptables/add-iptable-rules.sh
+chmod +x /etc/iptables/rm-iptable-rules.sh
+echo -e "#!/bin/sh\n iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o $NIC -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o $NIC -j MASQUERADE\n" |  tee -a /etc/iptables/add-iptable-rules.sh
+echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
+echo "[Unit]
+  	Description=iptables rules for OpenVPN
+   	Before=network-online.target
+   	Wants=network-online.target 	
+    [Service]
+    Type=oneshot
+    ExecStart=/etc/iptables/add-iptable-rules.sh
+	ExecStop=/etc/iptables/rm-iptable-rules.sh
+    RemainAfterExit=yes
+    [Install]
+    WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
+systemctl daemon-reload
+systemctl enable iptables-covernet
+systemctl start iptables-covernet
+}
 function Selection(){
 	Passwd
 	choice=0
