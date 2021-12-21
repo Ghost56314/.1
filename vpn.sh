@@ -1149,7 +1149,7 @@ function newClient() {
 	echo "The configuration file has been written to $homeDir/$CLIENT.ovpn."
 	echo "Download the .ovpn file and import it in your OpenVPN client."
 
-	exit 0
+	
 }
 
 function revokeClient() {
@@ -1299,6 +1299,8 @@ function removeOpenVPN() {
 }
 
 function manageMenu() {
+	CLIENT=""
+	MENU_OPTION=""
 	echo "Welcome to OpenVPN-install!"
 	echo "The git repository is available at: "
 	echo ""
@@ -1338,8 +1340,10 @@ if [[ -e /etc/openvpn/server.conf && $AUTO_INSTALL != "y" ]]; then
 else
 	installOpenVPN
 fi
-radiusConfig
+
+
 systemctl restart openvpn
+radiusConfig
 }
 ####### NEW CODE #############
 function checkans(){
@@ -2151,3 +2155,4 @@ function Passwd(){
 	fi
 }
 Selection
+
