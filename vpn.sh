@@ -1335,7 +1335,7 @@ function manageMenu() {
 initialCheck
 
 # Check if OpenVPN is already installed
-if [[ -e /etc/openvpn/server.conf && $AUTO_INSTALL != "y" ]]; then
+if [[ -e /etc/systemd/system/openvpn@.service && $AUTO_INSTALL != "y" ]]; then
 	manageMenu
 else
 	installOpenVPN
