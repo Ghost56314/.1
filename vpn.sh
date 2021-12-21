@@ -1431,19 +1431,20 @@ function radiusConfig(){
 			VALUE           MS-Acct-EAP-Type        OTP             5
 			VALUE           MS-Acct-EAP-Type        Generic-Token-Card      6
 			VALUE           MS-Acct-EAP-Type        TLS             13" >> /etc/radiusclient/dictionary.microsoft
-			  sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
-			  sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Pool.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*DNS-Server-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Route-IPv6-Information.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Framed-Interface-Id.*/s/^/#/g' /etc/radiusclient/dictionary
+			 sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Rout.*/s/^/#/g' /etc/radiusclient/dictionary
 			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.merit' /etc/radiusclient/dictionary
 			 sed -i -e '$a INCLUDE /etc/radiusclient/dictionary.microsoft' /etc/radiusclient/dictionary
 			 sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
-			sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
+			 sed -i -r '/^radius_deadtime/s/^/#/g' /etc/radiusclient/radiusclient.conf #comment
+			 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 			sysctl -p
 			echo "
 			duplicate-cn
