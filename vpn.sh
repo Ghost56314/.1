@@ -1460,6 +1460,7 @@ END-VENDOR Microsoft" | tee /etc/radiusclient/dictionary.microsoft
 			 sed -i '/issue.*issue/a seqfile \/var\/run\/freeradius\/freeradius.pid' /etc/radiusclient/radiusclient.conf
 			 sed -i -r '/^radius_deadtime/s/^/#/g' /etc/radiusclient/radiusclient.conf #comment
 			 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
+			 mkdir /var/run/freeradius
 			sysctl -p
 			echo "
 			duplicate-cn
