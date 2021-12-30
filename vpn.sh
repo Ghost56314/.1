@@ -1381,7 +1381,7 @@ function radiusConfig(){
 		./configure --prefix=/
 		make && make install
 		touch /etc/radiusclient/dictionary.microsoft 
-			echo"# Microsoft’s VSA’s, from RFC 2548
+			echo "# Microsoft’s VSA’s, from RFC 2548
 #
 # $Id: poptop_ads_howto_8.htm,v 1.8 2008/10/02 08:11:48 wskwok Exp $
 #
@@ -1445,7 +1445,7 @@ VALUE MS-Acct-EAP-Type MD5 4
 VALUE MS-Acct-EAP-Type OTP 5
 VALUE MS-Acct-EAP-Type Generic-Token-Card 6
 VALUE MS-Acct-EAP-Type TLS 13
-END-VENDOR Microsoft" >> /etc/radiusclient/dictionary.microsoft
+END-VENDOR Microsoft" | tee /etc/radiusclient/dictionary.microsoft
 			 sed -i -r '/.*ATTRIBUTE.*NAS-IPv6-Address.*/s/^/#/g' /etc/radiusclient/dictionary
 			 sed -i -r '/.*ATTRIBUTE.*Framed-IPv6-Prefix.*/s/^/#/g' /etc/radiusclient/dictionary
 			 sed -i -r '/.*ATTRIBUTE.*Login-IPv6-Host.*/s/^/#/g' /etc/radiusclient/dictionary
