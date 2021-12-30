@@ -1381,8 +1381,7 @@ function radiusConfig(){
 		./configure --prefix=/
 		make && make install
 		touch /etc/radiusclient/dictionary.microsoft 
-			echo"
-# Microsoft’s VSA’s, from RFC 2548
+			echo"# Microsoft’s VSA’s, from RFC 2548
 #
 # $Id: poptop_ads_howto_8.htm,v 1.8 2008/10/02 08:11:48 wskwok Exp $
 #
