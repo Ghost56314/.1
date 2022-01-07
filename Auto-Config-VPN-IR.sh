@@ -2106,7 +2106,7 @@ PUBLICIP=$(curl -s https://api.ipify.org)
         until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
 done
-ip tunnel add gre1 mode gre local $PUBLICIP remote $IRIP ttl 255
+ip tunnel add gre1 mode gre local $IRIP remote $PUBLICIP ttl 255
 ip addr add 10.0.0.2/30 dev gre1
 ip link set gre1 up
 echo '100 GRE' >> /etc/iproute2/rt_tables
