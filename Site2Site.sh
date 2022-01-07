@@ -9,10 +9,10 @@ IRIP=$(curl -s https://api.ipify.org)
         read -rp "Public IRAN address or hostname: " -e -i "$IRIP" IRPOINT
 done
 
-ip tunnel add gre1 mode gre local $PUBLICIP remote $IRIP ttl 255
+ip tunnel add gre1 mode gre local $ENDPOINT remote $IRPOINT ttl 255
 ip addr add 10.0.0.1/30 dev gre1
 ip link set gre1 up
-iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $PUBLICIP
-iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -o gre+ -j SNAT --to-source $PUBLICIP
+iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $ENDPOINT
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT
 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 sysctl -p
