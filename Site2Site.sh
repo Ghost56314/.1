@@ -14,3 +14,5 @@ ip addr add 10.0.0.1/30 dev gre1
 ip link set gre1 up
 iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $PUBLICIP
 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -o gre+ -j SNAT --to-source $PUBLICIP
+sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
+sysctl -p
