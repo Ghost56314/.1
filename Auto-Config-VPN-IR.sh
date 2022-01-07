@@ -2096,7 +2096,7 @@ sed -i -r '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf #uncomment
 sysctl -p
 fi
 }
-function setupsitetosite(){
+function setupstie2site(){
 #!/bin/bash
 IRIP=$(curl -s https://api.ipify.org)
         until [[ $IRPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
