@@ -2141,16 +2141,16 @@ function Selection(){
 	echo "4) Install PPTP Server With IBSng Config"
 	echo "5) Install IKEv2 Server With IBSng Config"
 	echo "6) Install Socksv5 Server With IBSng Config"
-  echo
+        echo
 	echo "7) Edit IBSng Configuration"
 	echo
-  echo "8) Setup Site to Site Tunnel"
-  echo
+        echo "8) Setup Site to Site Tunnel"
+        echo
 	echo "0) Exit"
 	echo
 	read -rp "Select a number:" Selection
 
-	if [ $Selection -gt 7 ]
+	if [ $Selection -gt 8 ]
 	then
 		echo "The variable is greater than 8."
 		sleep 1s
@@ -2175,7 +2175,7 @@ function Selection(){
 	elif [ $Selection -eq 7 ]
 	then
 		edit
-  elif [ $Selection -eq 8 ]
+        elif [ $Selection -eq 8 ]
 	then
 		setupstie2site
 	elif [ $Selection -eq 0 ]
