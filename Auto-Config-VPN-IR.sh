@@ -3457,7 +3457,7 @@ function Selection(){
 	echo "3) Install L2TP Server With IBSng Config"
 	echo "4) Install PPTP Server With IBSng Config"
 	echo "5) Install IKEv2 Server With IBSng Config"
-	echo "6) Install Socksv5 Server With IBSng Config"
+	echo "6) Install ShadowSocks Server"
         echo
 	echo "7) Edit IBSng Configuration"
 	echo
