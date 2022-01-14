@@ -2116,6 +2116,19 @@ ip rule add from 10.69.1.0/24 table GRE
 ip rule add from 10.69.2.0/24 table GRE
 ip rule add from 10.69.3.0/24 table GRE
 ip rule add from 10.69.4.0/24 table GRE
+crontab -l > gre_cron
+echo "@reboot ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255" >> gre_cron
+echo "@reboot ip addr add 10.0.0.2/30 dev gre1" >> gre_cron
+echo "@reboot ip link set gre1 up" >> gre_cron
+echo "@reboot echo '100 GRE' >> /etc/iproute2/rt_tables" >> gre_cron
+echo "@reboot ip rule add from 10.0.0.0/30 table GRE" >> gre_cron
+echo "@reboot ip route add default via 10.0.0.1 table GRE" >> gre_cron
+echo "@reboot ip rule add from 10.69.1.0/24 table GRE" >> gre_cron
+echo "@reboot ip rule add from 10.69.2.0/24 table GRE" >> gre_cron
+echo "@reboot ip rule add from 10.69.3.0/24 table GRE" >> gre_cron
+echo "@reboot ip rule add from 10.69.4.0/24 table GRE" >> gre_cron
+crontab gre_cron
+rm gre_cron
 }
 function installsocks5(){
 #!/usr/bin/env bash
