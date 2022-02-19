@@ -2106,9 +2106,9 @@ PUBLICIP=$(curl -s https://api.ipify.org)
         until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
 done
-GREIP=10.0.0.2
+GREIP=10.0.0.
         until [[ $GREIP =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Please enter private ip for GRE tunnel: " -e -i "GREIP" GREIP
+        read -rp "Please enter private ip for GRE tunnel: " -e -i "$GREIP" GREIP
 done
 ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255
 ip addr add $GREIP/24 dev gre1
