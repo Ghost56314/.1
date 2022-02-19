@@ -40,9 +40,3 @@ systemctl enable iptables-covernet
 systemctl start iptables-covernet
 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 sysctl -p
-crontab -l > gre_cron
-echo "@reboot ip tunnel add gre1 mode gre local $ENDPOINT remote $IRPOINT ttl 255" >> gre_cron
-echo "@reboot ip addr add 10.0.0.1/30 dev gre1" >> gre_cron
-echo "@reboot ip link set gre1 up" >> gre_cron
-crontab gre_cron
-rm gre_cron
