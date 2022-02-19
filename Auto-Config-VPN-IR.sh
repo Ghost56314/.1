@@ -2698,7 +2698,7 @@ install_prepare_port() {
     echo -e "[${red}Error${plain}] Please enter a correct number [1-65535]"
     done
 }
-install_prepare_cipher(){
+iinstall_prepare_cipher(){
     while true
     do
     echo -e "Please select stream cipher for ${software[${selected}-1]}:"
