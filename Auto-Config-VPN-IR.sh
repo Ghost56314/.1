@@ -2116,49 +2116,13 @@ ip rule add from 10.69.1.0/24 table GRE
 ip rule add from 10.69.2.0/24 table GRE
 ip rule add from 10.69.3.0/24 table GRE
 ip rule add from 10.69.4.0/24 table GRE
-crontab -l > gre_cron
-echo "@reboot ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255" >> gre_cron
-echo "@reboot ip addr add 10.0.0.2/30 dev gre1" >> gre_cron
-echo "@reboot ip link set gre1 up" >> gre_cron
-echo "@reboot echo '100 GRE' >> /etc/iproute2/rt_tables" >> gre_cron
-echo "@reboot ip rule add from 10.0.0.0/30 table GRE" >> gre_cron
-echo "@reboot ip route add default via 10.0.0.1 table GRE" >> gre_cron
-echo "@reboot ip rule add from 10.69.1.0/24 table GRE" >> gre_cron
-echo "@reboot ip rule add from 10.69.2.0/24 table GRE" >> gre_cron
-echo "@reboot ip rule add from 10.69.3.0/24 table GRE" >> gre_cron
-echo "@reboot ip rule add from 10.69.4.0/24 table GRE" >> gre_cron
-crontab gre_cron
-rm gre_cron
+echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255\n ip addr add 10.0.0.2/30 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE |  tee -a /etc/iptables/add-iptable-rules.sh
 }
+
 function installsocks5(){
 #!/usr/bin/env bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
-#
-# Auto install Shadowsocks Server (all version)
-#
-# Copyright (C) 2016-2019 Teddysun <i@teddysun.com>
-#
-# System Required:  CentOS 6+, Debian7+, Ubuntu12+
-#
-# Reference URL:
-# https://github.com/shadowsocks/shadowsocks
-# https://github.com/shadowsocks/shadowsocks-go
-# https://github.com/shadowsocks/shadowsocks-libev
-# https://github.com/shadowsocks/shadowsocks-windows
-# https://github.com/shadowsocksr-rm/shadowsocksr
-# https://github.com/shadowsocksrr/shadowsocksr
-# https://github.com/shadowsocksrr/shadowsocksr-csharp
-#
-# Thanks:
-# @clowwindy  <https://twitter.com/clowwindy>
-# @breakwa11  <https://twitter.com/breakwa11>
-# @cyfdecyf   <https://twitter.com/cyfdecyf>
-# @madeye     <https://github.com/madeye>
-# @linusyang  <https://github.com/linusyang>
-# @Akkariiin  <https://github.com/Akkariiin>
-# 
-# Intro:  https://teddysun.com/486.html
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
