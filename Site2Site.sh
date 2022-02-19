@@ -25,18 +25,24 @@ chmod +x /etc/iptables/rm-iptable-rules.sh
 echo -e "#!/bin/sh\n iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.1.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.2.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.3.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.4.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT" |  tee -a /etc/iptables/add-iptable-rules.sh
 echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
 echo "[Unit]
-  	Description=iptables rules for Covernet
-   	Before=network-online.target
-   	Wants=network-online.target 	
-    [Service]
-    Type=oneshot
-    ExecStart=/etc/iptables/add-iptable-rules.sh
-    ExecStop=/etc/iptables/rm-iptable-rules.sh
-    RemainAfterExit=yes
-    [Install]
-    WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
+Description=iptables rules for Covernet
+Before=network-online.target
+Wants=network-online.target 	
+[Service]
+Type=oneshot
+ExecStart=/etc/iptables/add-iptable-rules.sh
+ExecStop=/etc/iptables/rm-iptable-rules.sh
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
 systemctl daemon-reload
 systemctl enable iptables-covernet
 systemctl start iptables-covernet
 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 sysctl -p
+crontab -l > gre_cron
+echo "@reboot ip tunnel add gre1 mode gre local $ENDPOINT remote $IRPOINT ttl 255" >> gre_cron
+echo "@reboot ip addr add 10.0.0.1/30 dev gre1" >> gre_cron
+echo "@reboot ip link set gre1 up" >> gre_cron
+crontab gre_cron
+rm gre_cron
