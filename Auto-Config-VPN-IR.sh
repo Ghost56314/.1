@@ -2106,8 +2106,12 @@ PUBLICIP=$(curl -s https://api.ipify.org)
         until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
 done
+GREIP=10.0.0.2
+        until [[ $GREIP =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Please enter private ip for GRE tunnel: " -e -i "GREIP" GREIP
+done
 ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255
-ip addr add 10.0.0.2/30 dev gre1
+ip addr add $GREIP/24 dev gre1
 ip link set gre1 up
 echo '100 GRE' >> /etc/iproute2/rt_tables
 ip rule add from 10.0.0.0/30 table GRE
@@ -2116,7 +2120,7 @@ ip rule add from 10.69.1.0/24 table GRE
 ip rule add from 10.69.2.0/24 table GRE
 ip rule add from 10.69.3.0/24 table GRE
 ip rule add from 10.69.4.0/24 table GRE
-echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255\n ip addr add 10.0.0.2/30 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE |  tee -a /etc/iptables/add-iptable-rules.sh
+echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255\n ip addr add $GREIP/24 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE |  tee -a /etc/iptables/add-iptable-rules.sh
 }
 
 function installsocks5(){
