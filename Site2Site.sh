@@ -22,7 +22,7 @@ touch /etc/iptables/add-iptable-rules.sh
 touch /etc/iptables/rm-iptable-rules.sh
 chmod +x /etc/iptables/add-iptable-rules.sh
 chmod +x /etc/iptables/rm-iptable-rules.sh
-echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local 192.168.22.122 remote 192.168.22.121 ttl 255\n ip addr add 10.0.0.1/30 dev gre1\n ip link set gre1 up\n iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.1.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.2.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.3.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.4.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT" |  tee -a /etc/iptables/add-iptable-rules.sh
+echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $ENDPOINT remote $IRPOINT ttl 255\n ip addr add 10.0.0.1/30 dev gre1\n ip link set gre1 up\n iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.1.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.2.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.3.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT\n iptables -t nat -A POSTROUTING -s 10.69.4.0/24 ! -o gre+ -j SNAT --to-source $ENDPOINT" |  tee -a /etc/iptables/add-iptable-rules.sh
 echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
 echo "[Unit]
 Description=iptables rules for Covernet
