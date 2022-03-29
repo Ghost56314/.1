@@ -1493,24 +1493,24 @@ systemctl restart openvpn
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
 		sleep 1
-		echo -e "
-	NAS-Identifier=OpenVpn
-	Service-Type=5
-	Framed-Protocol=1
-	NAS-Port-Type=5
-	NAS-IP-Address=$IP
-	OpenVPNConfig=/etc/openvpn/server.conf
-	subnet=255.255.255.0
-	overwriteccfiles=true
-	server
-	{
-		acctport=1813
-		authport=1812
-		name=$IPBS
-		retry=1
-		wait=1
-		sharedsecret=$secpass
-	}" >> /usr/lib/openvpn/radiusplugin.cnf
+echo -e "
+NAS-Identifier=OpenVpn
+Service-Type=5
+Framed-Protocol=1
+NAS-Port-Type=5
+NAS-IP-Address=$IP
+OpenVPNConfig=/etc/openvpn/server.conf
+subnet=255.255.255.0
+overwriteccfiles=true
+server
+{
+acctport=1813
+authport=1812
+name=$IPBS
+retry=1
+wait=1
+sharedsecret=$secpass
+}" >> /usr/lib/openvpn/radiusplugin.cnf
 		systemctl restart openvpn
 		g=0
 		elif [ "$ans" = "n" ]; then
