@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 function installopenvpn(){  
-
+preinst
 function isRoot() {
 	if [ "$EUID" -ne 0 ]; then
 		return 1
@@ -959,18 +959,18 @@ management 0.0.0.0 7507" >>/etc/openvpn/server.conf
 
 	# Script to add rules
 	echo "#!/bin/sh
-iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o gre1 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o $NIC -j MASQUERADE
 iptables -I INPUT 1 -i tun0 -j ACCEPT
-iptables -I FORWARD 1 -i gre1 -o tun0 -j ACCEPT
-iptables -I FORWARD 1 -i tun0 -o gre1 -j ACCEPT
+iptables -I FORWARD 1 -i $NIC -o tun0 -j ACCEPT
+iptables -I FORWARD 1 -i tun0 -o $NIC -j ACCEPT
 iptables -I INPUT 1 -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >/etc/iptables/add-openvpn-rules.sh
 
 	if [[ $IPV6_SUPPORT == 'y' ]]; then
-		echo "ip6tables -t nat -I POSTROUTING 1 -s fd42:42:42:42::/112 -o gre1 -j MASQUERADE
+		echo "ip6tables -t nat -I POSTROUTING 1 -s fd42:42:42:42::/112 -o $NIC -j MASQUERADE
 ip6tables -I INPUT 1 -i tun0 -j ACCEPT
-ip6tables -I FORWARD 1 -i gre1 -o tun0 -j ACCEPT
-ip6tables -I FORWARD 1 -i tun0 -o gre1 -j ACCEPT
-ip6tables -I INPUT 1 -i gre1 -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/add-openvpn-rules.sh
+ip6tables -I FORWARD 1 -i $NIC -o tun0 -j ACCEPT
+ip6tables -I FORWARD 1 -i tun0 -o $NIC -j ACCEPT
+ip6tables -I INPUT 1 -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/add-openvpn-rules.sh
 	fi
 
 	# Script to remove rules
@@ -984,9 +984,9 @@ iptables -D INPUT -i gre1 -p $PROTOCOL --dport $PORT -j ACCEPT" >/etc/iptables/r
 	if [[ $IPV6_SUPPORT == 'y' ]]; then
 		echo "ip6tables -t nat -D POSTROUTING -s fd42:42:42:42::/112 -o gre1 -j MASQUERADE
 ip6tables -D INPUT -i tun0 -j ACCEPT
-ip6tables -D FORWARD -i $NIC -o tun0 -j ACCEPT
-ip6tables -D FORWARD -i tun0 -o $NIC -j ACCEPT
-ip6tables -D INPUT -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/rm-openvpn-rules.sh
+ip6tables -D FORWARD -i gre1 -o tun0 -j ACCEPT
+ip6tables -D FORWARD -i tun0 -o gre1 -j ACCEPT
+ip6tables -D INPUT -i gre1 -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/rm-openvpn-rules.sh
 	fi
 
 	chmod +x /etc/iptables/add-openvpn-rules.sh
@@ -1357,7 +1357,7 @@ function checkans(){
 	done
 }
 function radiusConfig(){
-
+preinst
 	packages=("openvpn-auth-radius" "build-essential" "libgcrypt20-dev" "unzip" "mlocate")
     for pkg in ${packages[@]}; do
         #is_pkg_installed=$(dpkg-query -W --showformat='${Status}\n' ${pkg} | grep "install ok installed" )
@@ -1374,14 +1374,14 @@ function radiusConfig(){
 	if test -f "$freeradius"; then
         echo freeradius is installed.
     else
-wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
-unzip master.zip
-mv freeradius-client-master freeradius-client
-cd freeradius-client
-./configure --prefix=/
-make && make install
-touch /etc/radiusclient/dictionary.microsoft 
-echo "# Microsoft’s VSA’s, from RFC 2548
+		wget https://github.com/FreeRADIUS/freeradius-client/archive/master.zip
+		unzip master.zip
+		mv freeradius-client-master freeradius-client
+		cd freeradius-client
+		./configure --prefix=/
+		make && make install
+		touch /etc/radiusclient/dictionary.microsoft 
+			echo "# Microsoft’s VSA’s, from RFC 2548
 #
 # $Id: poptop_ads_howto_8.htm,v 1.8 2008/10/02 08:11:48 wskwok Exp $
 #
@@ -1493,24 +1493,24 @@ systemctl restart openvpn
           sed -i -r "/.*for authserver applies.*/a acctserver   $IPBS" /etc/radiusclient/radiusclient.conf
           echo "Add Successfully"
 		sleep 1
-		echo -e "
-	NAS-Identifier=OpenVpn
-	Service-Type=5
-	Framed-Protocol=1
-	NAS-Port-Type=5
-	NAS-IP-Address=$IP
-	OpenVPNConfig=/etc/openvpn/server.conf
-	subnet=255.255.255.0
-	overwriteccfiles=true
-	server
-	{
-		acctport=1813
-		authport=1812
-		name=$IPBS
-		retry=1
-		wait=1
-		sharedsecret=$secpass
-	}" >> /usr/lib/openvpn/radiusplugin.cnf
+echo -e "
+NAS-Identifier=OpenVpn
+Service-Type=5
+Framed-Protocol=1
+NAS-Port-Type=5
+NAS-IP-Address=$IP
+OpenVPNConfig=/etc/openvpn/server.conf
+subnet=255.255.255.0
+overwriteccfiles=true
+server
+{
+acctport=1813
+authport=1812
+name=$IPBS
+retry=1
+wait=1
+sharedsecret=$secpass
+}" >> /usr/lib/openvpn/radiusplugin.cnf
 		systemctl restart openvpn
 		g=0
 		elif [ "$ans" = "n" ]; then
@@ -1522,7 +1522,7 @@ systemctl restart openvpn
 	done
 
 }
- function edit(){
+ function addras(){
 	clear
 	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
 	f=0
@@ -1570,9 +1570,25 @@ systemctl restart openvpn
 		fi
         
 	done
-
+}
+function editras(){
+	clear
+	cat /etc/radiusclient/radiusclient.conf | grep -o '^authserver.*\|^acc.*\|^securepass.*'
+	read -rp "Please enter new RAS IP: " newrasip
+	read -rp "Now please enter new Secret: " newsecret
+	sed -i -r "s/authserver.*/authserver   $newrasip/g"  /etc/radiusclient/radiusclient.conf
+	sed -i -r "s/acctserver.*/acctserver   $newrasip/g" /etc/radiusclient/radiusclient.conf
+	sed -i -r "s/sharedsecret=.*/sharedsecret=$newsecret/g" /usr/lib/openvpn/radiusplugin.cnf
+	sed -i -r "s/name=.*/name=$newrasip/g" /usr/lib/openvpn/radiusplugin.cnf
+	echo "$newrasip	$newsecret" |  tee /etc/radiusclient/servers
+	sleep 3
+	}
+function preinst(){
+ufw disable
+apt update && apt dist-upgrade -y && apt autoremove -y
 }
 function installocs(){
+preinst
 echo installing...
 apt update -qq ; apt install ocserv certbot -y
 clear
@@ -1595,7 +1611,7 @@ radiusConfig
 systemctl restart ocserv
 }
 function installl2tp(){
-#!/bin/bash
+preinst
 read -rp "Please Enter IPSec_PSK: " YOUR_IPSEC_PSK
 YOUR_IPSEC_PSK=$YOUR_IPSEC_PSK
 # =====================================================
@@ -2048,6 +2064,7 @@ radiusConfig
 systemctl restart xl2tpd
 }
 function installpptp(){
+preinst
 echo "Installing..."
 apt update -qq ; apt install pptpd build-essential libgcrypt20-dev -y
 echo -e "localip 10.69.4.1\nremoteip 10.69.4.5-250" |  tee -a /etc/pptpd.conf
@@ -2061,95 +2078,67 @@ radiusConfig
 systemctl restart pptpd
 }
 
-function iptablesserv(){
-add-iptable-rules=/etc/iptables/add-iptable-rules.sh
-if test -f "$add-iptable-rules"; then
-echo iptables is configured.
-else
-NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o gre1 -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o gre1 -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o gre1 -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o gre1 -j MASQUERADE
-mkdir /etc/iptables/
-touch /etc/iptables/add-iptable-rules.sh
-touch /etc/iptables/rm-iptable-rules.sh
-chmod +x /etc/iptables/add-iptable-rules.sh
-chmod +x /etc/iptables/rm-iptable-rules.sh
-echo -e "#!/bin/sh\n iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o gre1 -j MASQUERADE\n" |  tee -a /etc/iptables/add-iptable-rules.sh
-echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
-echo "[Unit]
-  	Description=iptables rules for Covernet
-   	Before=network-online.target
-   	Wants=network-online.target 	
-    [Service]
-    Type=oneshot
-    ExecStart=/etc/iptables/add-iptable-rules.sh
-    ExecStop=/etc/iptables/rm-iptable-rules.sh
-    RemainAfterExit=yes
-    [Install]
-    WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
-systemctl daemon-reload
-systemctl enable iptables-covernet
-systemctl start iptables-covernet
-sed -i -r '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf #uncomment
-sysctl -p
-fi
-}
-function setupstie2site(){
-#!/bin/bash
-IRIP=$(curl -s https://api.ipify.org)
-        until [[ $IRPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public IRAN address or hostname: " -e -i "$IRIP" IRPOINT
-done
-PUBLICIP=$(curl -s https://api.ipify.org)
-        until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
-done
-GREIP=10.0.0.
-        until [[ $GREIP =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Please enter private ip for GRE tunnel: " -e -i "$GREIP" GREIP
-done
-ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255
-ip addr add $GREIP/24 dev gre1
-ip link set gre1 up
-echo '100 GRE' >> /etc/iproute2/rt_tables
-ip rule add from 10.0.0.0/30 table GRE
-ip route add default via 10.0.0.1 table GRE
-ip rule add from 10.69.1.0/24 table GRE
-ip rule add from 10.69.2.0/24 table GRE
-ip rule add from 10.69.3.0/24 table GRE
-ip rule add from 10.69.4.0/24 table GRE
-echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255\n ip addr add $GREIP/24 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE" |  tee -a /etc/iptables/add-iptable-rules.sh
-}
-
 function installsocks5(){
+preinst
 #!/usr/bin/env bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
+#
+# Auto install Shadowsocks Server (all version)
+#
+# Copyright (C) 2016-2019 Teddysun <i@teddysun.com>
+#
+# System Required:  CentOS 6+, Debian7+, Ubuntu12+
+#
+# Reference URL:
+# https://github.com/shadowsocks/shadowsocks
+# https://github.com/shadowsocks/shadowsocks-go
+# https://github.com/shadowsocks/shadowsocks-libev
+# https://github.com/shadowsocks/shadowsocks-windows
+# https://github.com/shadowsocksr-rm/shadowsocksr
+# https://github.com/shadowsocksrr/shadowsocksr
+# https://github.com/shadowsocksrr/shadowsocksr-csharp
+#
+# Thanks:
+# @clowwindy  <https://twitter.com/clowwindy>
+# @breakwa11  <https://twitter.com/breakwa11>
+# @cyfdecyf   <https://twitter.com/cyfdecyf>
+# @madeye     <https://github.com/madeye>
+# @linusyang  <https://github.com/linusyang>
+# @Akkariiin  <https://github.com/Akkariiin>
+# 
+# Intro:  https://teddysun.com/486.html
+
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
+
 [[ $EUID -ne 0 ]] && echo -e "[${red}Error${plain}] This script must be run as root!" && exit 1
+
 cur_dir=$( pwd )
 software=(Shadowsocks-Python ShadowsocksR Shadowsocks-Go Shadowsocks-libev)
+
 libsodium_file="libsodium-1.0.17"
 libsodium_url="https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz"
+
 mbedtls_file="mbedtls-2.16.0"
 mbedtls_url="https://tls.mbed.org/download/mbedtls-2.16.0-gpl.tgz"
+
 shadowsocks_python_file="shadowsocks-master"
 shadowsocks_python_url="https://github.com/shadowsocks/shadowsocks/archive/master.zip"
 shadowsocks_python_init="/etc/init.d/shadowsocks-python"
 shadowsocks_python_config="/etc/shadowsocks-python/config.json"
 shadowsocks_python_centos="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks"
 shadowsocks_python_debian="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-debian"
+
 shadowsocks_r_file="shadowsocksr-3.2.2"
 shadowsocks_r_url="https://github.com/shadowsocksrr/shadowsocksr/archive/3.2.2.tar.gz"
 shadowsocks_r_init="/etc/init.d/shadowsocks-r"
 shadowsocks_r_config="/etc/shadowsocks-r/config.json"
 shadowsocks_r_centos="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocksR"
 shadowsocks_r_debian="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocksR-debian"
+
 shadowsocks_go_file_64="shadowsocks-server-linux64-1.2.2"
 shadowsocks_go_url_64="https://dl.lamp.sh/shadowsocks/shadowsocks-server-linux64-1.2.2.gz"
 shadowsocks_go_file_32="shadowsocks-server-linux32-1.2.2"
@@ -2158,10 +2147,12 @@ shadowsocks_go_init="/etc/init.d/shadowsocks-go"
 shadowsocks_go_config="/etc/shadowsocks-go/config.json"
 shadowsocks_go_centos="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-go"
 shadowsocks_go_debian="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-go-debian"
+
 shadowsocks_libev_init="/etc/init.d/shadowsocks-libev"
 shadowsocks_libev_config="/etc/shadowsocks-libev/config.json"
 shadowsocks_libev_centos="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-libev"
 shadowsocks_libev_debian="https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-libev-debian"
+
 # Stream Ciphers
 common_ciphers=(
 aes-256-gcm
@@ -2247,17 +2238,21 @@ tls1.2_ticket_fastauth_compatible
 obfs_libev=(http tls)
 # initialization parameter
 libev_obfs=""
+
 disable_selinux(){
     if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
         sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
         setenforce 0
     fi
 }
+
 check_sys(){
     local checkType=$1
     local value=$2
+
     local release=''
     local systemPackage=''
+
     if [[ -f /etc/redhat-release ]]; then
         release="centos"
         systemPackage="yum"
@@ -2280,6 +2275,7 @@ check_sys(){
         release="centos"
         systemPackage="yum"
     fi
+
     if [[ "${checkType}" == "sysRelease" ]]; then
         if [ "${value}" == "${release}" ]; then
             return 0
@@ -2294,12 +2290,15 @@ check_sys(){
         fi
     fi
 }
+
 version_ge(){
     test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"
 }
+
 version_gt(){
     test "$(echo "$@" | tr " " "\n" | sort -V | head -n 1)" != "$1"
 }
+
 check_kernel_version(){
     local kernel_version=$(uname -r | cut -d- -f1)
     if version_gt ${kernel_version} 3.7.0; then
@@ -2308,6 +2307,7 @@ check_kernel_version(){
         return 1
     fi
 }
+
 check_kernel_headers(){
     if check_sys packageManager yum; then
         if rpm -qa | grep -q headers-$(uname -r); then
@@ -2324,6 +2324,7 @@ check_kernel_headers(){
     fi
     return 1
 }
+
 getversion(){
     if [[ -s /etc/redhat-release ]]; then
         grep -oE  "[0-9.]+" /etc/redhat-release
@@ -2331,6 +2332,7 @@ getversion(){
         grep -oE  "[0-9.]+" /etc/issue
     fi
 }
+
 centosversion(){
     if check_sys sysRelease centos; then
         local code=$1
@@ -2345,6 +2347,7 @@ centosversion(){
         return 1
     fi
 }
+
 autoconf_version(){
     if [ ! "$(command -v autoconf)" ]; then
         echo -e "[${green}Info${plain}] Starting install package autoconf"
@@ -2362,25 +2365,30 @@ autoconf_version(){
         return 1
     fi
 }
+
 get_ip(){
     local IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
     [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
     [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipinfo.io/ip )
     echo ${IP}
 }
+
 get_ipv6(){
     local ipv6=$(wget -qO- -t1 -T2 ipv6.icanhazip.com)
     [ -z ${ipv6} ] && return 1 || return 0
 }
+
 get_libev_ver(){
     libev_ver=$(wget --no-check-certificate -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
     [ -z ${libev_ver} ] && echo -e "[${red}Error${plain}] Get shadowsocks-libev latest version failed" && exit 1
 }
+
 get_opsy(){
     [ -f /etc/redhat-release ] && awk '{print ($1,$3~/^[0-9]/?$3:$4)}' /etc/redhat-release && return
     [ -f /etc/os-release ] && awk -F'[= "]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release && return
     [ -f /etc/lsb-release ] && awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release && return
 }
+
 is_64bit(){
     if [ `getconf WORD_BIT` = '32' ] && [ `getconf LONG_BIT` = '64' ] ; then
         return 0
@@ -2388,6 +2396,7 @@ is_64bit(){
         return 1
     fi
 }
+
 debianversion(){
     if check_sys sysRelease debian;then
         local version=$( get_opsy )
@@ -2402,6 +2411,7 @@ debianversion(){
         return 1
     fi
 }
+
 download(){
     local filename=$(basename $1)
     if [ -f ${1} ]; then
@@ -2415,8 +2425,10 @@ download(){
         fi
     fi
 }
+
 download_files(){
     cd ${cur_dir}
+
     if   [ "${selected}" == "1" ]; then
         download "${shadowsocks_python_file}.zip" "${shadowsocks_python_url}"
         if check_sys packageManager yum; then
@@ -2446,6 +2458,7 @@ download_files(){
         get_libev_ver
         shadowsocks_libev_file="shadowsocks-libev-$(echo ${libev_ver} | sed -e 's/^[a-zA-Z]//g')"
         shadowsocks_libev_url="https://github.com/shadowsocks/shadowsocks-libev/releases/download/${libev_ver}/${shadowsocks_libev_file}.tar.gz"
+
         download "${shadowsocks_libev_file}.tar.gz" "${shadowsocks_libev_url}"
         if check_sys packageManager yum; then
             download "${shadowsocks_libev_init}" "${shadowsocks_libev_centos}"
@@ -2453,7 +2466,9 @@ download_files(){
             download "${shadowsocks_libev_init}" "${shadowsocks_libev_debian}"
         fi
     fi
+
 }
+
 get_char(){
     SAVEDSTTY=$(stty -g)
     stty -echo
@@ -2463,6 +2478,7 @@ get_char(){
     stty echo
     stty $SAVEDSTTY
 }
+
 error_detect_depends(){
     local command=$1
     local depend=`echo "${command}" | awk '{print $4}'`
@@ -2474,6 +2490,7 @@ error_detect_depends(){
         exit 1
     fi
 }
+
 config_firewall(){
     if centosversion 6; then
         /etc/init.d/iptables status > /dev/null 2>&1
@@ -2502,12 +2519,15 @@ config_firewall(){
         fi
     fi
 }
+
 config_shadowsocks(){
+
 if check_kernel_version && check_kernel_headers; then
     fast_open="true"
 else
     fast_open="false"
 fi
+
 if   [ "${selected}" == "1" ]; then
     if [ ! -d "$(dirname ${shadowsocks_python_config})" ]; then
         mkdir -p $(dirname ${shadowsocks_python_config})
@@ -2567,9 +2587,11 @@ elif [ "${selected}" == "4" ]; then
     if get_ipv6; then
         server_value="[\"[::0]\",\"0.0.0.0\"]"
     fi
+
     if [ ! -d "$(dirname ${shadowsocks_libev_config})" ]; then
         mkdir -p $(dirname ${shadowsocks_libev_config})
     fi
+
     if [ "${libev_obfs}" == "y" ] || [ "${libev_obfs}" == "Y" ]; then
         cat > ${shadowsocks_libev_config}<<-EOF
 {
@@ -2601,8 +2623,10 @@ EOF
 }
 EOF
     fi
+
 fi
 }
+
 install_dependencies(){
     if check_sys packageManager yum; then
         echo -e "[${green}Info${plain}] Checking the EPEL repository..."
@@ -2613,6 +2637,7 @@ install_dependencies(){
         [ ! "$(command -v yum-config-manager)" ] && yum install -y yum-utils > /dev/null 2>&1
         [ x"$(yum-config-manager epel | grep -w enabled | awk '{print $3}')" != x"True" ] && yum-config-manager --enable epel > /dev/null 2>&1
         echo -e "[${green}Info${plain}] Checking the EPEL repository complete..."
+
         yum_depends=(
             unzip gzip openssl openssl-devel gcc python python-devel python-setuptools pcre pcre-devel libtool libevent
             autoconf automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel
@@ -2626,12 +2651,14 @@ install_dependencies(){
             gettext build-essential unzip gzip python python-dev python-setuptools curl openssl libssl-dev
             autoconf automake libtool gcc make perl cpio libpcre3 libpcre3-dev zlib1g-dev libev-dev libc-ares-dev git qrencode
         )
+
         apt-get -y update
         for depend in ${apt_depends[@]}; do
             error_detect_depends "apt-get -y install ${depend}"
         done
     fi
 }
+
 install_check(){
     if check_sys packageManager yum || check_sys packageManager apt; then
         if centosversion 5; then
@@ -2642,12 +2669,14 @@ install_check(){
         return 1
     fi
 }
+
 install_select(){
     if ! install_check; then
         echo -e "[${red}Error${plain}] Your OS is not supported to run it!"
         echo "Please change to CentOS 6+/Debian 7+/Ubuntu 12+ and try again."
         exit 1
     fi
+
     clear
     while true
     do
@@ -2671,6 +2700,7 @@ install_select(){
     esac
     done
 }
+
 install_prepare_password(){
     echo "Please enter password for ${software[${selected}-1]}"
     read -p "(Default password: teddysun.com):" shadowsockspwd
@@ -2679,6 +2709,7 @@ install_prepare_password(){
     echo "password = ${shadowsockspwd}"
     echo
 }
+
 install_prepare_port() {
     while true
     do
@@ -2698,10 +2729,12 @@ install_prepare_port() {
     echo -e "[${red}Error${plain}] Please enter a correct number [1-65535]"
     done
 }
-iinstall_prepare_cipher(){
+
+install_prepare_cipher(){
     while true
     do
     echo -e "Please select stream cipher for ${software[${selected}-1]}:"
+
     if   [[ "${selected}" == "1" || "${selected}" == "4" ]]; then
         for ((i=1;i<=${#common_ciphers[@]};i++ )); do
             hint="${common_ciphers[$i-1]}"
@@ -2754,12 +2787,14 @@ iinstall_prepare_cipher(){
         fi
         shadowsockscipher=${go_ciphers[$pick-1]}
     fi
+
     echo
     echo "cipher = ${shadowsockscipher}"
     echo
     break
     done
 }
+
 install_prepare_protocol(){
     while true
     do
@@ -2786,6 +2821,7 @@ install_prepare_protocol(){
     break
     done
 }
+
 install_prepare_obfs(){
     while true
     do
@@ -2812,6 +2848,7 @@ install_prepare_obfs(){
     break
     done
 }
+
 install_prepare_libev_obfs(){
     if autoconf_version || centosversion 6; then
         while true
@@ -2831,6 +2868,7 @@ install_prepare_libev_obfs(){
             ;;
         esac
         done
+
         if [ "${libev_obfs}" == "y" ] || [ "${libev_obfs}" == "Y" ]; then
             while true
             do
@@ -2861,7 +2899,9 @@ install_prepare_libev_obfs(){
         echo -e "[${green}Info${plain}] autoconf version is less than 2.67, simple-obfs for ${software[${selected}-1]} installation has been skipped"
     fi
 }
+
 install_prepare(){
+
     if  [[ "${selected}" == "1" || "${selected}" == "3" || "${selected}" == "4" ]]; then
         install_prepare_password
         install_prepare_port
@@ -2876,10 +2916,13 @@ install_prepare(){
         install_prepare_protocol
         install_prepare_obfs
     fi
+
     echo
     echo "Press any key to start...or Press Ctrl+C to cancel"
     char=`get_char`
+
 }
+
 install_libsodium(){
     if [ ! -f /usr/lib/libsodium.a ]; then
         cd ${cur_dir}
@@ -2896,6 +2939,7 @@ install_libsodium(){
         echo -e "[${green}Info${plain}] ${libsodium_file} already installed."
     fi
 }
+
 install_mbedtls(){
     if [ ! -f /usr/lib/libmbedtls.a ]; then
         cd ${cur_dir}
@@ -2913,6 +2957,7 @@ install_mbedtls(){
         echo -e "[${green}Info${plain}] ${mbedtls_file} already installed."
     fi
 }
+
 install_shadowsocks_python(){
     cd ${cur_dir}
     unzip -q ${shadowsocks_python_file}.zip
@@ -2921,8 +2966,10 @@ install_shadowsocks_python(){
         install_cleanup
         exit 1
     fi
+
     cd ${shadowsocks_python_file}
     python setup.py install --record /usr/local/shadowsocks_python.log
+
     if [ -f /usr/bin/ssserver ] || [ -f /usr/local/bin/ssserver ]; then
         chmod +x ${shadowsocks_python_init}
         local service_name=$(basename ${shadowsocks_python_init})
@@ -2940,6 +2987,7 @@ install_shadowsocks_python(){
         exit 1
     fi
 }
+
 install_shadowsocks_r(){
     cd ${cur_dir}
     tar zxf ${shadowsocks_r_file}.tar.gz
@@ -2961,6 +3009,7 @@ install_shadowsocks_r(){
         exit 1
     fi
 }
+
 install_shadowsocks_go(){
     cd ${cur_dir}
     if is_64bit; then
@@ -2980,9 +3029,11 @@ install_shadowsocks_go(){
         fi
         mv -f ${shadowsocks_go_file_32} /usr/bin/shadowsocks-server
     fi
+
     if [ -f /usr/bin/shadowsocks-server ]; then
         chmod +x /usr/bin/shadowsocks-server
         chmod +x ${shadowsocks_go_init}
+
         local service_name=$(basename ${shadowsocks_go_init})
         if check_sys packageManager yum; then
             chkconfig --add ${service_name}
@@ -2998,6 +3049,7 @@ install_shadowsocks_go(){
         exit 1
     fi
 }
+
 install_shadowsocks_libev(){
     cd ${cur_dir}
     tar zxf ${shadowsocks_libev_file}.tar.gz
@@ -3020,6 +3072,7 @@ install_shadowsocks_libev(){
         exit 1
     fi
 }
+
 install_shadowsocks_libev_obfs(){
     if [ "${libev_obfs}" == "y" ] || [ "${libev_obfs}" == "Y" ]; then
         cd ${cur_dir}
@@ -3103,7 +3156,7 @@ install_completed_libev(){
 
 qr_generate_python(){
     if [ "$(command -v qrencode)" ]; then
-        local tmp=$(echo -n "${shadowsockscipher}:${shadowsockspwd}@$(get_ip):${shadowsocksport}" | base64 -w0) 
+        local tmp=$(echo -n "${shadowsockscipher}:${shadowsockspwd}@$(get_ip):${shadowsocksport}" | base64 -w0)
         local qr_code="ss://${tmp}"
         echo
         echo "Your QR Code: (For Shadowsocks Windows, OSX, Android and iOS clients)"
@@ -3415,6 +3468,753 @@ case "${action}" in
         ;;
 esac
 }
+function installwiregaurd(){
+preinst
+# Detect Debian users running the script with "sh" instead of bash
+if readlink /proc/$$/exe | grep -q "dash"; then
+	echo 'This installer needs to be run with "bash", not "sh".'
+	exit
+fi
+
+# Discard stdin. Needed when running from an one-liner which includes a newline
+read -N 999999 -t 0.001
+
+# Detect OpenVZ 6
+if [[ $(uname -r | cut -d "." -f 1) -eq 2 ]]; then
+	echo "The system is running an old kernel, which is incompatible with this installer."
+	exit
+fi
+
+# Detect OS
+# $os_version variables aren't always in use, but are kept here for convenience
+if grep -qs "ubuntu" /etc/os-release; then
+	os="ubuntu"
+	os_version=$(grep 'VERSION_ID' /etc/os-release | cut -d '"' -f 2 | tr -d '.')
+elif [[ -e /etc/debian_version ]]; then
+	os="debian"
+	os_version=$(grep -oE '[0-9]+' /etc/debian_version | head -1)
+elif [[ -e /etc/almalinux-release || -e /etc/rocky-release || -e /etc/centos-release ]]; then
+	os="centos"
+	os_version=$(grep -shoE '[0-9]+' /etc/almalinux-release /etc/rocky-release /etc/centos-release | head -1)
+elif [[ -e /etc/fedora-release ]]; then
+	os="fedora"
+	os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
+else
+	echo "This installer seems to be running on an unsupported distribution.
+Supported distros are Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS and Fedora."
+	exit
+fi
+
+if [[ "$os" == "ubuntu" && "$os_version" -lt 1804 ]]; then
+	echo "Ubuntu 18.04 or higher is required to use this installer.
+This version of Ubuntu is too old and unsupported."
+	exit
+fi
+
+if [[ "$os" == "debian" && "$os_version" -lt 10 ]]; then
+	echo "Debian 10 or higher is required to use this installer.
+This version of Debian is too old and unsupported."
+	exit
+fi
+
+if [[ "$os" == "centos" && "$os_version" -lt 7 ]]; then
+	echo "CentOS 7 or higher is required to use this installer.
+This version of CentOS is too old and unsupported."
+	exit
+fi
+
+# Detect environments where $PATH does not include the sbin directories
+if ! grep -q sbin <<< "$PATH"; then
+	echo '$PATH does not include sbin. Try using "su -" instead of "su".'
+	exit
+fi
+
+systemd-detect-virt -cq
+is_container="$?"
+
+if [[ "$os" == "fedora" && "$os_version" -eq 31 && $(uname -r | cut -d "." -f 2) -lt 6 && ! "$is_container" -eq 0 ]]; then
+	echo 'Fedora 31 is supported, but the kernel is outdated.
+Upgrade the kernel using "dnf upgrade kernel" and restart.'
+	exit
+fi
+
+if [[ "$EUID" -ne 0 ]]; then
+	echo "This installer needs to be run with superuser privileges."
+	exit
+fi
+
+if [[ "$is_container" -eq 0 ]]; then
+	if [ "$(uname -m)" != "x86_64" ]; then
+		echo "In containerized systems, this installer supports only the x86_64 architecture.
+The system runs on $(uname -m) and is unsupported."
+		exit
+	fi
+	# TUN device is required to use BoringTun if running inside a container
+	if [[ ! -e /dev/net/tun ]] || ! ( exec 7<>/dev/net/tun ) 2>/dev/null; then
+		echo "The system does not have the TUN device available.
+TUN needs to be enabled before running this installer."
+		exit
+	fi
+fi
+
+new_client_dns () {
+	echo "Select a DNS server for the client:"
+	echo "   1) Current system resolvers"
+	echo "   2) Google"
+	echo "   3) 1.1.1.1"
+	echo "   4) OpenDNS"
+	echo "   5) Quad9"
+	echo "   6) AdGuard"
+	read -p "DNS server [1]: " dns
+	until [[ -z "$dns" || "$dns" =~ ^[1-6]$ ]]; do
+		echo "$dns: invalid selection."
+		read -p "DNS server [1]: " dns
+	done
+		# DNS
+	case "$dns" in
+		1|"")
+			# Locate the proper resolv.conf
+			# Needed for systems running systemd-resolved
+			if grep -q '^nameserver 127.0.0.53' "/etc/resolv.conf"; then
+				resolv_conf="/run/systemd/resolve/resolv.conf"
+			else
+				resolv_conf="/etc/resolv.conf"
+			fi
+			# Extract nameservers and provide them in the required format
+			dns=$(grep -v '^#\|^;' "$resolv_conf" | grep '^nameserver' | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | xargs | sed -e 's/ /, /g')
+		;;
+		2)
+			dns="8.8.8.8, 8.8.4.4"
+		;;
+		3)
+			dns="1.1.1.1, 1.0.0.1"
+		;;
+		4)
+			dns="208.67.222.222, 208.67.220.220"
+		;;
+		5)
+			dns="9.9.9.9, 149.112.112.112"
+		;;
+		6)
+			dns="94.140.14.14, 94.140.15.15"
+		;;
+	esac
+}
+
+new_client_setup () {
+	# Given a list of the assigned internal IPv4 addresses, obtain the lowest still
+	# available octet. Important to start looking at 2, because 1 is our gateway.
+	octet=2
+	while grep AllowedIPs /etc/wireguard/wg0.conf | cut -d "." -f 4 | cut -d "/" -f 1 | grep -q "$octet"; do
+		(( octet++ ))
+	done
+	# Don't break the WireGuard configuration in case the address space is full
+	if [[ "$octet" -eq 255 ]]; then
+		echo "253 clients are already configured. The WireGuard internal subnet is full!"
+		exit
+	fi
+	key=$(wg genkey)
+	psk=$(wg genpsk)
+	# Configure client in the server
+	cat << EOF >> /etc/wireguard/wg0.conf
+# BEGIN_PEER $client
+[Peer]
+PublicKey = $(wg pubkey <<< $key)
+PresharedKey = $psk
+AllowedIPs = 10.7.0.$octet/32$(grep -q 'fddd:2c4:2c4:2c4::1' /etc/wireguard/wg0.conf && echo ", fddd:2c4:2c4:2c4::$octet/128")
+# END_PEER $client
+EOF
+	# Create client configuration
+	cat << EOF > ~/"$client".conf
+[Interface]
+Address = 10.7.0.$octet/24$(grep -q 'fddd:2c4:2c4:2c4::1' /etc/wireguard/wg0.conf && echo ", fddd:2c4:2c4:2c4::$octet/64")
+DNS = $dns
+PrivateKey = $key
+[Peer]
+PublicKey = $(grep PrivateKey /etc/wireguard/wg0.conf | cut -d " " -f 3 | wg pubkey)
+PresharedKey = $psk
+AllowedIPs = 0.0.0.0/0, ::/0
+Endpoint = $(grep '^# ENDPOINT' /etc/wireguard/wg0.conf | cut -d " " -f 3):$(grep ListenPort /etc/wireguard/wg0.conf | cut -d " " -f 3)
+PersistentKeepalive = 25
+EOF
+}
+
+if [[ ! -e /etc/wireguard/wg0.conf ]]; then
+	# Detect some Debian minimal setups where neither wget nor curl are installed
+	if ! hash wget 2>/dev/null && ! hash curl 2>/dev/null; then
+		echo "Wget is required to use this installer."
+		read -n1 -r -p "Press any key to install Wget and continue..."
+		apt-get update
+		apt-get install -y wget
+	fi
+	clear
+	echo 'Welcome to this WireGuard road warrior installer!'
+	# If system has a single IPv4, it is selected automatically. Else, ask the user
+	if [[ $(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}') -eq 1 ]]; then
+		ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
+	else
+		number_of_ip=$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')
+		echo
+		echo "Which IPv4 address should be used?"
+		ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | nl -s ') '
+		read -p "IPv4 address [1]: " ip_number
+		until [[ -z "$ip_number" || "$ip_number" =~ ^[0-9]+$ && "$ip_number" -le "$number_of_ip" ]]; do
+			echo "$ip_number: invalid selection."
+			read -p "IPv4 address [1]: " ip_number
+		done
+		[[ -z "$ip_number" ]] && ip_number="1"
+		ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$ip_number"p)
+	fi
+	# If $ip is a private IP address, the server must be behind NAT
+	if echo "$ip" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
+		echo
+		echo "This server is behind NAT. What is the public IPv4 address or hostname?"
+		# Get public IP and sanitize with grep
+		get_public_ip=$(grep -m 1 -oE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$' <<< "$(wget -T 10 -t 1 -4qO- "http://ip1.dynupdate.no-ip.com/" || curl -m 10 -4Ls "http://ip1.dynupdate.no-ip.com/")")
+		read -p "Public IPv4 address / hostname [$get_public_ip]: " public_ip
+		# If the checkip service is unavailable and user didn't provide input, ask again
+		until [[ -n "$get_public_ip" || -n "$public_ip" ]]; do
+			echo "Invalid input."
+			read -p "Public IPv4 address / hostname: " public_ip
+		done
+		[[ -z "$public_ip" ]] && public_ip="$get_public_ip"
+	fi
+	# If system has a single IPv6, it is selected automatically
+	if [[ $(ip -6 addr | grep -c 'inet6 [23]') -eq 1 ]]; then
+		ip6=$(ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}')
+	fi
+	# If system has multiple IPv6, ask the user to select one
+	if [[ $(ip -6 addr | grep -c 'inet6 [23]') -gt 1 ]]; then
+		number_of_ip6=$(ip -6 addr | grep -c 'inet6 [23]')
+		echo
+		echo "Which IPv6 address should be used?"
+		ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}' | nl -s ') '
+		read -p "IPv6 address [1]: " ip6_number
+		until [[ -z "$ip6_number" || "$ip6_number" =~ ^[0-9]+$ && "$ip6_number" -le "$number_of_ip6" ]]; do
+			echo "$ip6_number: invalid selection."
+			read -p "IPv6 address [1]: " ip6_number
+		done
+		[[ -z "$ip6_number" ]] && ip6_number="1"
+		ip6=$(ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}' | sed -n "$ip6_number"p)
+	fi
+	echo
+	echo "What port should WireGuard listen to?"
+	read -p "Port [51820]: " port
+	until [[ -z "$port" || "$port" =~ ^[0-9]+$ && "$port" -le 65535 ]]; do
+		echo "$port: invalid port."
+		read -p "Port [51820]: " port
+	done
+	[[ -z "$port" ]] && port="51820"
+	echo
+	echo "Enter a name for the first client:"
+	read -p "Name [client]: " unsanitized_client
+	# Allow a limited set of characters to avoid conflicts
+	client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
+	[[ -z "$client" ]] && client="client"
+	echo
+	new_client_dns
+	# Set up automatic updates for BoringTun if the user is fine with that
+	if [[ "$is_container" -eq 0 ]]; then
+		echo
+		echo "BoringTun will be installed to set up WireGuard in the system."
+		read -p "Should automatic updates be enabled for it? [Y/n]: " boringtun_updates
+		until [[ "$boringtun_updates" =~ ^[yYnN]*$ ]]; do
+			echo "$remove: invalid selection."
+			read -p "Should automatic updates be enabled for it? [Y/n]: " boringtun_updates
+		done
+		[[ -z "$boringtun_updates" ]] && boringtun_updates="y"
+		if [[ "$boringtun_updates" =~ ^[yY]$ ]]; then
+			if [[ "$os" == "centos" || "$os" == "fedora" ]]; then
+				cron="cronie"
+			elif [[ "$os" == "debian" || "$os" == "ubuntu" ]]; then
+				cron="cron"
+			fi
+		fi
+	fi
+	echo
+	echo "WireGuard installation is ready to begin."
+	# Install a firewall if firewalld or iptables are not already available
+	if ! systemctl is-active --quiet firewalld.service && ! hash iptables 2>/dev/null; then
+		if [[ "$os" == "centos" || "$os" == "fedora" ]]; then
+			firewall="firewalld"
+			# We don't want to silently enable firewalld, so we give a subtle warning
+			# If the user continues, firewalld will be installed and enabled during setup
+			echo "firewalld, which is required to manage routing tables, will also be installed."
+		elif [[ "$os" == "debian" || "$os" == "ubuntu" ]]; then
+			# iptables is way less invasive than firewalld so no warning is given
+			firewall="iptables"
+		fi
+	fi
+	read -n1 -r -p "Press any key to continue..."
+	# Install WireGuard
+	# If not running inside a container, set up the WireGuard kernel module
+	if [[ ! "$is_container" -eq 0 ]]; then
+		if [[ "$os" == "ubuntu" ]]; then
+			# Ubuntu
+			apt-get update
+			apt-get install -y wireguard qrencode $firewall
+		elif [[ "$os" == "debian" && "$os_version" -ge 11 ]]; then
+			# Debian 11 or higher
+			apt-get update
+			apt-get install -y wireguard qrencode $firewall
+		elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+			# Debian 10
+			if ! grep -qs '^deb .* buster-backports main' /etc/apt/sources.list /etc/apt/sources.list.d/*.list; then
+				echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list
+			fi
+			apt-get update
+			# Try to install kernel headers for the running kernel and avoid a reboot. This
+			# can fail, so it's important to run separately from the other apt-get command.
+			apt-get install -y linux-headers-"$(uname -r)"
+			# There are cleaner ways to find out the $architecture, but we require an
+			# specific format for the package name and this approach provides what we need.
+			architecture=$(dpkg --get-selections 'linux-image-*-*' | cut -f 1 | grep -oE '[^-]*$' -m 1)
+			# linux-headers-$architecture points to the latest headers. We install it
+			# because if the system has an outdated kernel, there is no guarantee that old
+			# headers were still downloadable and to provide suitable headers for future
+			# kernel updates.
+			apt-get install -y linux-headers-"$architecture"
+			apt-get install -y wireguard qrencode $firewall
+		elif [[ "$os" == "centos" && "$os_version" -eq 8 ]]; then
+			# CentOS 8
+			dnf install -y epel-release elrepo-release
+			dnf install -y kmod-wireguard wireguard-tools qrencode $firewall
+			mkdir -p /etc/wireguard/
+		elif [[ "$os" == "centos" && "$os_version" -eq 7 ]]; then
+			# CentOS 7
+			yum install -y epel-release https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
+			yum install -y yum-plugin-elrepo
+			yum install -y kmod-wireguard wireguard-tools qrencode $firewall
+			mkdir -p /etc/wireguard/
+		elif [[ "$os" == "fedora" ]]; then
+			# Fedora
+			dnf install -y wireguard-tools qrencode $firewall
+			mkdir -p /etc/wireguard/
+		fi
+	# Else, we are inside a container and BoringTun needs to be used
+	else
+		# Install required packages
+		if [[ "$os" == "ubuntu" ]]; then
+			# Ubuntu
+			apt-get update
+			apt-get install -y qrencode ca-certificates $cron $firewall
+			apt-get install -y wireguard-tools --no-install-recommends
+		elif [[ "$os" == "debian" && "$os_version" -ge 11 ]]; then
+			# Debian 11 or higher
+			apt-get update
+			apt-get install -y qrencode ca-certificates $cron $firewall
+			apt-get install -y wireguard-tools --no-install-recommends
+		elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+			# Debian 10
+			if ! grep -qs '^deb .* buster-backports main' /etc/apt/sources.list /etc/apt/sources.list.d/*.list; then
+				echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list
+			fi
+			apt-get update
+			apt-get install -y qrencode ca-certificates $cron $firewall
+			apt-get install -y wireguard-tools --no-install-recommends
+		elif [[ "$os" == "centos" && "$os_version" -eq 8 ]]; then
+			# CentOS 8
+			dnf install -y epel-release
+			dnf install -y wireguard-tools qrencode ca-certificates tar $cron $firewall
+			mkdir -p /etc/wireguard/
+		elif [[ "$os" == "centos" && "$os_version" -eq 7 ]]; then
+			# CentOS 7
+			yum install -y epel-release
+			yum install -y wireguard-tools qrencode ca-certificates tar $cron $firewall
+			mkdir -p /etc/wireguard/
+		elif [[ "$os" == "fedora" ]]; then
+			# Fedora
+			dnf install -y wireguard-tools qrencode ca-certificates tar $cron $firewall
+			mkdir -p /etc/wireguard/
+		fi
+		# Grab the BoringTun binary using wget or curl and extract into the right place.
+		# Don't use this service elsewhere without permission! Contact me before you do!
+		{ wget -qO- https://wg.nyr.be/1/latest/download 2>/dev/null || curl -sL https://wg.nyr.be/1/latest/download ; } | tar xz -C /usr/local/sbin/ --wildcards 'boringtun-*/boringtun' --strip-components 1
+		# Configure wg-quick to use BoringTun
+		mkdir /etc/systemd/system/wg-quick@wg0.service.d/ 2>/dev/null
+		echo "[Service]
+Environment=WG_QUICK_USERSPACE_IMPLEMENTATION=boringtun
+Environment=WG_SUDO=1" > /etc/systemd/system/wg-quick@wg0.service.d/boringtun.conf
+		if [[ -n "$cron" ]] && [[ "$os" == "centos" || "$os" == "fedora" ]]; then
+			systemctl enable --now crond.service
+		fi
+	fi
+	# If firewalld was just installed, enable it
+	if [[ "$firewall" == "firewalld" ]]; then
+		systemctl enable --now firewalld.service
+	fi
+	# Generate wg0.conf
+	cat << EOF > /etc/wireguard/wg0.conf
+# Do not alter the commented lines
+# They are used by wireguard-install
+# ENDPOINT $([[ -n "$public_ip" ]] && echo "$public_ip" || echo "$ip")
+[Interface]
+Address = 10.7.0.1/24$([[ -n "$ip6" ]] && echo ", fddd:2c4:2c4:2c4::1/64")
+PrivateKey = $(wg genkey)
+ListenPort = $port
+EOF
+	chmod 600 /etc/wireguard/wg0.conf
+	# Enable net.ipv4.ip_forward for the system
+	echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-wireguard-forward.conf
+	# Enable without waiting for a reboot or service restart
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+	if [[ -n "$ip6" ]]; then
+		# Enable net.ipv6.conf.all.forwarding for the system
+		echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.d/99-wireguard-forward.conf
+		# Enable without waiting for a reboot or service restart
+		echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+	fi
+	if systemctl is-active --quiet firewalld.service; then
+		# Using both permanent and not permanent rules to avoid a firewalld
+		# reload.
+		firewall-cmd --add-port="$port"/udp
+		firewall-cmd --zone=trusted --add-source=10.7.0.0/24
+		firewall-cmd --permanent --add-port="$port"/udp
+		firewall-cmd --permanent --zone=trusted --add-source=10.7.0.0/24
+		# Set NAT for the VPN subnet
+		firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to "$ip"
+		firewall-cmd --permanent --direct --add-rule ipv4 nat POSTROUTING 0 -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to "$ip"
+		if [[ -n "$ip6" ]]; then
+			firewall-cmd --zone=trusted --add-source=fddd:2c4:2c4:2c4::/64
+			firewall-cmd --permanent --zone=trusted --add-source=fddd:2c4:2c4:2c4::/64
+			firewall-cmd --direct --add-rule ipv6 nat POSTROUTING 0 -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to "$ip6"
+			firewall-cmd --permanent --direct --add-rule ipv6 nat POSTROUTING 0 -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to "$ip6"
+		fi
+	else
+		# Create a service to set up persistent iptables rules
+		iptables_path=$(command -v iptables)
+		ip6tables_path=$(command -v ip6tables)
+		# nf_tables is not available as standard in OVZ kernels. So use iptables-legacy
+		# if we are in OVZ, with a nf_tables backend and iptables-legacy is available.
+		if [[ $(systemd-detect-virt) == "openvz" ]] && readlink -f "$(command -v iptables)" | grep -q "nft" && hash iptables-legacy 2>/dev/null; then
+			iptables_path=$(command -v iptables-legacy)
+			ip6tables_path=$(command -v ip6tables-legacy)
+		fi
+		echo "[Unit]
+Before=network.target
+[Service]
+Type=oneshot
+ExecStart=$iptables_path -t nat -A POSTROUTING -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to $ip
+ExecStart=$iptables_path -I INPUT -p udp --dport $port -j ACCEPT
+ExecStart=$iptables_path -I FORWARD -s 10.7.0.0/24 -j ACCEPT
+ExecStart=$iptables_path -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+ExecStop=$iptables_path -t nat -D POSTROUTING -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to $ip
+ExecStop=$iptables_path -D INPUT -p udp --dport $port -j ACCEPT
+ExecStop=$iptables_path -D FORWARD -s 10.7.0.0/24 -j ACCEPT
+ExecStop=$iptables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" > /etc/systemd/system/wg-iptables.service
+		if [[ -n "$ip6" ]]; then
+			echo "ExecStart=$ip6tables_path -t nat -A POSTROUTING -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to $ip6
+ExecStart=$ip6tables_path -I FORWARD -s fddd:2c4:2c4:2c4::/64 -j ACCEPT
+ExecStart=$ip6tables_path -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+ExecStop=$ip6tables_path -t nat -D POSTROUTING -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to $ip6
+ExecStop=$ip6tables_path -D FORWARD -s fddd:2c4:2c4:2c4::/64 -j ACCEPT
+ExecStop=$ip6tables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/systemd/system/wg-iptables.service
+		fi
+		echo "RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target" >> /etc/systemd/system/wg-iptables.service
+		systemctl enable --now wg-iptables.service
+	fi
+	# Generates the custom client.conf
+	new_client_setup
+	# Enable and start the wg-quick service
+	systemctl enable --now wg-quick@wg0.service
+	# Set up automatic updates for BoringTun if the user wanted to
+	if [[ "$boringtun_updates" =~ ^[yY]$ ]]; then
+		# Deploy upgrade script
+		cat << 'EOF' > /usr/local/sbin/boringtun-upgrade
+#!/bin/bash
+latest=$(wget -qO- https://wg.nyr.be/1/latest 2>/dev/null || curl -sL https://wg.nyr.be/1/latest 2>/dev/null)
+# If server did not provide an appropriate response, exit
+if ! head -1 <<< "$latest" | grep -qiE "^boringtun.+[0-9]+\.[0-9]+.*$"; then
+	echo "Update server unavailable"
+	exit
+fi
+current=$(/usr/local/sbin/boringtun -V)
+if [[ "$current" != "$latest" ]]; then
+	download="https://wg.nyr.be/1/latest/download"
+	xdir=$(mktemp -d)
+	# If download and extraction are successful, upgrade the boringtun binary
+	if { wget -qO- "$download" 2>/dev/null || curl -sL "$download" ; } | tar xz -C "$xdir" --wildcards "boringtun-*/boringtun" --strip-components 1; then
+		systemctl stop wg-quick@wg0.service
+		rm -f /usr/local/sbin/boringtun
+		mv "$xdir"/boringtun /usr/local/sbin/boringtun
+		systemctl start wg-quick@wg0.service
+		echo "Succesfully updated to $(/usr/local/sbin/boringtun -V)"
+	else
+		echo "boringtun update failed"
+	fi
+	rm -rf "$xdir"
+else
+	echo "$current is up to date"
+fi
+EOF
+		chmod +x /usr/local/sbin/boringtun-upgrade
+		# Add cron job to run the updater daily at a random time between 3:00 and 5:59
+		{ crontab -l 2>/dev/null; echo "$(( $RANDOM % 60 )) $(( $RANDOM % 3 + 3 )) * * * /usr/local/sbin/boringtun-upgrade &>/dev/null" ; } | crontab -
+	fi
+	echo
+	qrencode -t UTF8 < ~/"$client.conf"
+	echo -e '\xE2\x86\x91 That is a QR code containing the client configuration.'
+	echo
+	# If the kernel module didn't load, system probably had an outdated kernel
+	# We'll try to help, but will not will not force a kernel upgrade upon the user
+	if [[ ! "$is_container" -eq 0 ]] && ! modprobe -nq wireguard; then
+		echo "Warning!"
+		echo "Installation was finished, but the WireGuard kernel module could not load."
+		if [[ "$os" == "ubuntu" && "$os_version" -eq 1804 ]]; then
+		echo 'Upgrade the kernel and headers with "apt-get install linux-generic" and restart.'
+		elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+		echo "Upgrade the kernel with \"apt-get install linux-image-$architecture\" and restart."
+		elif [[ "$os" == "centos" && "$os_version" -le 8 ]]; then
+			echo "Reboot the system to load the most recent kernel."
+		fi
+	else
+		echo "Finished!"
+	fi
+	echo
+	echo "The client configuration is available in:" ~/"$client.conf"
+	echo "New clients can be added by running this script again."
+else
+	clear
+	echo "WireGuard is already installed."
+	echo
+	echo "Select an option:"
+	echo "   1) Add a new client"
+	echo "   2) Remove an existing client"
+	echo "   3) Remove WireGuard"
+	echo "   4) Exit"
+	read -p "Option: " option
+	until [[ "$option" =~ ^[1-4]$ ]]; do
+		echo "$option: invalid selection."
+		read -p "Option: " option
+	done
+	case "$option" in
+		1)
+			echo
+			echo "Provide a name for the client:"
+			read -p "Name: " unsanitized_client
+			# Allow a limited set of characters to avoid conflicts
+			client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
+			while [[ -z "$client" ]] || grep -q "^# BEGIN_PEER $client$" /etc/wireguard/wg0.conf; do
+				echo "$client: invalid name."
+				read -p "Name: " unsanitized_client
+				client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
+			done
+			echo
+			new_client_dns
+			new_client_setup
+			# Append new client configuration to the WireGuard interface
+			wg addconf wg0 <(sed -n "/^# BEGIN_PEER $client/,/^# END_PEER $client/p" /etc/wireguard/wg0.conf)
+			echo
+			qrencode -t UTF8 < ~/"$client.conf"
+			echo -e '\xE2\x86\x91 That is a QR code containing your client configuration.'
+			echo
+			echo "$client added. Configuration available in:" ~/"$client.conf"
+			exit
+		;;
+		2)
+			# This option could be documented a bit better and maybe even be simplified
+			# ...but what can I say, I want some sleep too
+			number_of_clients=$(grep -c '^# BEGIN_PEER' /etc/wireguard/wg0.conf)
+			if [[ "$number_of_clients" = 0 ]]; then
+				echo
+				echo "There are no existing clients!"
+				exit
+			fi
+			echo
+			echo "Select the client to remove:"
+			grep '^# BEGIN_PEER' /etc/wireguard/wg0.conf | cut -d ' ' -f 3 | nl -s ') '
+			read -p "Client: " client_number
+			until [[ "$client_number" =~ ^[0-9]+$ && "$client_number" -le "$number_of_clients" ]]; do
+				echo "$client_number: invalid selection."
+				read -p "Client: " client_number
+			done
+			client=$(grep '^# BEGIN_PEER' /etc/wireguard/wg0.conf | cut -d ' ' -f 3 | sed -n "$client_number"p)
+			echo
+			read -p "Confirm $client removal? [y/N]: " remove
+			until [[ "$remove" =~ ^[yYnN]*$ ]]; do
+				echo "$remove: invalid selection."
+				read -p "Confirm $client removal? [y/N]: " remove
+			done
+			if [[ "$remove" =~ ^[yY]$ ]]; then
+				# The following is the right way to avoid disrupting other active connections:
+				# Remove from the live interface
+				wg set wg0 peer "$(sed -n "/^# BEGIN_PEER $client$/,\$p" /etc/wireguard/wg0.conf | grep -m 1 PublicKey | cut -d " " -f 3)" remove
+				# Remove from the configuration file
+				sed -i "/^# BEGIN_PEER $client$/,/^# END_PEER $client$/d" /etc/wireguard/wg0.conf
+				echo
+				echo "$client removed!"
+			else
+				echo
+				echo "$client removal aborted!"
+			fi
+			exit
+		;;
+		3)
+			echo
+			read -p "Confirm WireGuard removal? [y/N]: " remove
+			until [[ "$remove" =~ ^[yYnN]*$ ]]; do
+				echo "$remove: invalid selection."
+				read -p "Confirm WireGuard removal? [y/N]: " remove
+			done
+			if [[ "$remove" =~ ^[yY]$ ]]; then
+				port=$(grep '^ListenPort' /etc/wireguard/wg0.conf | cut -d " " -f 3)
+				if systemctl is-active --quiet firewalld.service; then
+					ip=$(firewall-cmd --direct --get-rules ipv4 nat POSTROUTING | grep '\-s 10.7.0.0/24 '"'"'!'"'"' -d 10.7.0.0/24' | grep -oE '[^ ]+$')
+					# Using both permanent and not permanent rules to avoid a firewalld reload.
+					firewall-cmd --remove-port="$port"/udp
+					firewall-cmd --zone=trusted --remove-source=10.7.0.0/24
+					firewall-cmd --permanent --remove-port="$port"/udp
+					firewall-cmd --permanent --zone=trusted --remove-source=10.7.0.0/24
+					firewall-cmd --direct --remove-rule ipv4 nat POSTROUTING 0 -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to "$ip"
+					firewall-cmd --permanent --direct --remove-rule ipv4 nat POSTROUTING 0 -s 10.7.0.0/24 ! -d 10.7.0.0/24 -j SNAT --to "$ip"
+					if grep -qs 'fddd:2c4:2c4:2c4::1/64' /etc/wireguard/wg0.conf; then
+						ip6=$(firewall-cmd --direct --get-rules ipv6 nat POSTROUTING | grep '\-s fddd:2c4:2c4:2c4::/64 '"'"'!'"'"' -d fddd:2c4:2c4:2c4::/64' | grep -oE '[^ ]+$')
+						firewall-cmd --zone=trusted --remove-source=fddd:2c4:2c4:2c4::/64
+						firewall-cmd --permanent --zone=trusted --remove-source=fddd:2c4:2c4:2c4::/64
+						firewall-cmd --direct --remove-rule ipv6 nat POSTROUTING 0 -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to "$ip6"
+						firewall-cmd --permanent --direct --remove-rule ipv6 nat POSTROUTING 0 -s fddd:2c4:2c4:2c4::/64 ! -d fddd:2c4:2c4:2c4::/64 -j SNAT --to "$ip6"
+					fi
+				else
+					systemctl disable --now wg-iptables.service
+					rm -f /etc/systemd/system/wg-iptables.service
+				fi
+				systemctl disable --now wg-quick@wg0.service
+				rm -f /etc/systemd/system/wg-quick@wg0.service.d/boringtun.conf
+				rm -f /etc/sysctl.d/99-wireguard-forward.conf
+				# Different packages were installed if the system was containerized or not
+				if [[ ! "$is_container" -eq 0 ]]; then
+					if [[ "$os" == "ubuntu" ]]; then
+						# Ubuntu
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard wireguard-tools
+					elif [[ "$os" == "debian" && "$os_version" -ge 11 ]]; then
+						# Debian 11 or higher
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard wireguard-tools
+					elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+						# Debian 10
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard wireguard-dkms wireguard-tools
+					elif [[ "$os" == "centos" && "$os_version" -eq 8 ]]; then
+						# CentOS 8
+						dnf remove -y kmod-wireguard wireguard-tools
+						rm -rf /etc/wireguard/
+					elif [[ "$os" == "centos" && "$os_version" -eq 7 ]]; then
+						# CentOS 7
+						yum remove -y kmod-wireguard wireguard-tools
+						rm -rf /etc/wireguard/
+					elif [[ "$os" == "fedora" ]]; then
+						# Fedora
+						dnf remove -y wireguard-tools
+						rm -rf /etc/wireguard/
+					fi
+				else
+					{ crontab -l 2>/dev/null | grep -v '/usr/local/sbin/boringtun-upgrade' ; } | crontab -
+					if [[ "$os" == "ubuntu" ]]; then
+						# Ubuntu
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard-tools
+					elif [[ "$os" == "debian" && "$os_version" -ge 11 ]]; then
+						# Debian 11 or higher
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard-tools
+					elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+						# Debian 10
+						rm -rf /etc/wireguard/
+						apt-get remove --purge -y wireguard-tools
+					elif [[ "$os" == "centos" && "$os_version" -eq 8 ]]; then
+						# CentOS 8
+						dnf remove -y wireguard-tools
+						rm -rf /etc/wireguard/
+					elif [[ "$os" == "centos" && "$os_version" -eq 7 ]]; then
+						# CentOS 7
+						yum remove -y wireguard-tools
+						rm -rf /etc/wireguard/
+					elif [[ "$os" == "fedora" ]]; then
+						# Fedora
+						dnf remove -y wireguard-tools
+						rm -rf /etc/wireguard/
+					fi
+					rm -f /usr/local/sbin/boringtun /usr/local/sbin/boringtun-upgrade
+				fi
+				echo
+				echo "WireGuard removed!"
+			else
+				echo
+				echo "WireGuard removal aborted!"
+			fi
+			exit
+		;;
+		4)
+			exit
+		;;
+	esac
+fi
+}
+function iptablesserv(){
+add-iptable-rules=/etc/iptables/add-iptable-rules.sh
+if test -f "$add-iptable-rules"; then
+echo iptables is configured.
+else
+NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+iptables -t nat -A POSTROUTING -s 10.69.1.0/24 -o gre1 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.2.0/24 -o gre1 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 -o gre1 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.69.4.0/24 -o gre1 -j MASQUERADE
+mkdir /etc/iptables/
+touch /etc/iptables/add-iptable-rules.sh
+touch /etc/iptables/rm-iptable-rules.sh
+chmod +x /etc/iptables/add-iptable-rules.sh
+chmod +x /etc/iptables/rm-iptable-rules.sh
+echo -e "#!/bin/sh\n iptables -t nat -I POSTROUTING -s 10.69.1.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.2.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.3.0/24 -o gre1 -j MASQUERADE\n iptables -t nat -I POSTROUTING -s 10.69.4.0/24 -o gre1 -j MASQUERADE\n" |  tee -a /etc/iptables/add-iptable-rules.sh
+echo -e "#!/bin/sh\n iptables -t nat -F" |  tee -a /etc/iptables/rm-iptable-rules.sh
+echo "[Unit]
+  	Description=iptables rules for Covernet
+   	Before=network-online.target
+   	Wants=network-online.target 	
+    [Service]
+    Type=oneshot
+    ExecStart=/etc/iptables/add-iptable-rules.sh
+    ExecStop=/etc/iptables/rm-iptable-rules.sh
+    RemainAfterExit=yes
+    [Install]
+    WantedBy=multi-user.target" >/etc/systemd/system/iptables-covernet.service
+systemctl daemon-reload
+systemctl enable iptables-covernet
+systemctl start iptables-covernet
+sed -i -r '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf #uncomment
+sysctl -p
+fi
+}
+function setupstie2site(){
+#!/bin/bash
+IRIP=$(curl -s https://api.ipify.org)
+        until [[ $IRPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Public IRAN address or hostname: " -e -i "$IRIP" IRPOINT
+done
+PUBLICIP=$(curl -s https://api.ipify.org)
+        until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
+done
+GREIP=10.0.0.
+        until [[ $GREIP =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Please enter private ip for GRE tunnel: " -e -i "$GREIP" GREIP
+done
+ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255
+ip addr add $GREIP/24 dev gre1
+ip link set gre1 up
+echo '100 GRE' >> /etc/iproute2/rt_tables
+ip rule add from 10.0.0.0/30 table GRE
+ip route add default via 10.0.0.1 table GRE
+ip rule add from 10.69.1.0/24 table GRE
+ip rule add from 10.69.2.0/24 table GRE
+ip rule add from 10.69.3.0/24 table GRE
+ip rule add from 10.69.4.0/24 table GRE
+echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $IRPOINT remote $ENDPOINT ttl 255\n ip addr add $GREIP/24 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE" |  tee -a /etc/iptables/add-iptable-rules.sh
+}
+
 function Selection(){
 	Passwd
 	choice=0
@@ -3424,33 +4224,35 @@ function Selection(){
 	printf " %-40s \n" "`date`"
 	echo
 	echo
-	echo "  
-	 ####    ####   #    #  ######  #####   #    #  ######   #####
-	#    #  #    #  #    #  #       #    #  ##   #  #          #
-	#       #    #  #    #  #####   #    #  # #  #  #####      #
-	#       #    #  #    #  #       #####   #  # #  #          #
-	#    #  #    #   #  #   #       #   #   #   ##  #          #
-	 ####    ####     ##    ######  #    #  #    #  ######     #"
+	echo -e "\e[0;34m
+ ██████  ██████  ██    ██ ███████ ██████  ███    ██ ███████ ████████     ██    ██ ██████  ███    ██ 
+██      ██    ██ ██    ██ ██      ██   ██ ████   ██ ██         ██        ██    ██ ██   ██ ████   ██ 
+██      ██    ██ ██    ██ █████   ██████  ██ ██  ██ █████      ██        ██    ██ ██████  ██ ██  ██ 
+██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
+ ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
+                                                                                                    
+                                                                                           \e[0m "
 	echo
 	echo
-	echo "1) Install OpenVPN Server With IBSng Config"
-	echo "2) Install Cisco Any Connect Server With IBSng Config"
-	echo "3) Install L2TP Server With IBSng Config"
-	echo "4) Install PPTP Server With IBSng Config"
-	echo "5) Install IKEv2 Server With IBSng Config"
-	echo "6) Install ShadowSocks Server"
-        echo
-	echo "7) Edit IBSng Configuration"
+	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
+	echo -e "\e[0;33m2) Install Cisco Any Connect Server With IBSng Config \e[0m"
+	echo -e "\e[0;31m3) Install L2TP Server With IBSng Config \e[0m"
+	echo -e "\e[0;33m4) Install PPTP Server With IBSng Config \e[0m"
+	echo -e "\e[0;31m5) Install IKEv2 Server With IBSng Config \e[0m"
+	echo -e "\e[0;33m6) Install ShadowSocks Server \e[0m"
+	echo -e "\e[0;31m7) Install WireGaurd Server \e[0m"
 	echo
-        echo "8) Setup Site to Site Tunnel"
-        echo
+	echo -e "\e[0;35m8) Setup Site to Site Tunnel \e[0m"
+	echo
+	echo -e "\e[0;32m9) Edit IBSng Configuration \e[0m"
+	echo
 	echo "0) Exit"
 	echo
 	read -rp "Select a number:" Selection
 
-	if [ $Selection -gt 8 ]
+	if [ $Selection -gt 10 ]
 	then
-		echo "The variable is greater than 8."
+		echo "The variable is greater than 9."
 		sleep 1s
 	elif [ $Selection -eq 1 ]
 	then
@@ -3472,10 +4274,13 @@ function Selection(){
 		installsocks5
 	elif [ $Selection -eq 7 ]
 	then
-		edit
-        elif [ $Selection -eq 8 ]
+		installwiregaurd
+	elif [ $Selection -eq 8 ]
 	then
 		setupstie2site
+	elif [ $Selection -eq 9 ]
+	then
+		editras
 	elif [ $Selection -eq 0 ]
 	then
 		choice=1
