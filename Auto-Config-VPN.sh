@@ -106,7 +106,7 @@ if [[ ! -e /etc/openvpn/server/server.conf ]]; then
 		apt-get install -y wget
 	fi
 	clear
-	echo 'Welcome to this OpenVPN road warrior installer!'
+	echo 'Welcome to this OpenVPN installer!'
 	# If system has a single IPv4, it is selected automatically. Else, ask the user
 	if [[ $(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}') -eq 1 ]]; then
 		ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
@@ -1925,8 +1925,8 @@ install_select(){
 
 install_prepare_password(){
     echo "Please enter password for ${software[${selected}-1]}"
-    read -p "(Default password: teddysun.com):" shadowsockspwd
-    [ -z "${shadowsockspwd}" ] && shadowsockspwd="teddysun.com"
+    read -p "(Default password: covernet):" shadowsockspwd
+    [ -z "${shadowsockspwd}" ] && shadowsockspwd="covernet"
     echo
     echo "password = ${shadowsockspwd}"
     echo
@@ -2461,7 +2461,6 @@ install_main(){
     fi
 
     echo
-    echo "Welcome to visit: https://teddysun.com/486.html"
     echo "Enjoy it!"
     echo
 }
@@ -2870,7 +2869,7 @@ if [[ ! -e /etc/wireguard/wg0.conf ]]; then
 		apt-get install -y wget
 	fi
 	clear
-	echo 'Welcome to this WireGuard road warrior installer!'
+	echo 'Welcome to this WireGuard installer!'
 	# If system has a single IPv4, it is selected automatically. Else, ask the user
 	if [[ $(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}') -eq 1 ]]; then
 		ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
@@ -3426,7 +3425,7 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                           \e[0m \e[0;35m V2.1 \e[0m "
+                                                                                           \e[0m \e[0;35m V2.2 \e[0m "
 	echo
 	echo
 	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
