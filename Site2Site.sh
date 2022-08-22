@@ -1,4 +1,5 @@
 #!/bin/bash
+Passwd
 PUBLICIP=$(curl -s https://api.ipify.org)
         until [[ $ENDPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public Foreign address or hostname: " -e -i "$PUBLICIP" ENDPOINT
@@ -40,3 +41,14 @@ systemctl enable iptables-covernet
 systemctl start iptables-covernet
 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 sysctl -p
+function Passwd(){
+	ACTUAL="u1rGiEkhAN"
+	read -s -p "Password: " enteredpass
+	echo ""
+	if [ "$enteredpass" != "$ACTUAL" ]
+	then
+		echo "Sorry" && echo "exiting" 
+		exit 0
+	fi
+}
+Selection
