@@ -3410,7 +3410,6 @@ sysctl -p
 fi
 }
 function setupstie2site(){
-#!/bin/bash
 LOCALIP=$(curl -s https://api.ipify.org)
         until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
@@ -3419,19 +3418,34 @@ REMOTEIP=$(curl -s https://api.ipify.org)
         until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public address or hostname Of Remote Server: " -e -i "$REMOTEIP" REMOTEPOINT
 done
-ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
-ip addr add 10.0.0.2/30 dev gre1
-ip link set gre1 up
 echo '100 GRE' >> /etc/iproute2/rt_tables
-ip rule add from 10.0.0.0/30 table GRE
-ip route add default via 10.0.0.1 table GRE
-ip rule add from 10.69.1.0/24 table GRE
-ip rule add from 10.69.2.0/24 table GRE
-ip rule add from 10.69.3.0/24 table GRE
-ip rule add from 10.69.4.0/24 table GRE
-echo -e "#!/bin/sh\n ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255\n ip addr add $GREIP/24 dev gre1\n ip link set gre1 up\n echo '100 GRE' >> /etc/iproute2/rt_tables\n ip rule add from 10.0.0.0/30 table GRE\n ip route add default via 10.0.0.1 table GRE\n ip rule add from 10.69.1.0/24 table GRE\n ip rule add from 10.69.2.0/24 table GRE\n ip rule add from 10.69.3.0/24 table GRE\n ip rule add from 10.69.4.0/24 table GRE" |  tee -a /etc/iptables/add-iptable-rules.sh
-}
-
+echo "[Unit]
+Description=iptables rules for Covernet
+Before=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+ExecStart=ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
+ExecStart=ip addr add 10.0.0.2/30 dev gre1
+ExecStart=ip link set gre1 up
+ExecStart=ip rule add from 10.0.0.0/30 table GRE
+ExecStart=ip route add default via 10.0.0.1 table GRE
+ExecStart=ip rule add from 10.69.1.0/24 table GRE
+ExecStart=ip rule add from 10.69.2.0/24 table GRE
+ExecStart=ip rule add from 10.69.3.0/24 table GRE
+ExecStart=ip rule add from 10.69.4.0/24 table GRE
+ExecStop=ip link delete gre1
+ExecStop=ip route del default via 10.0.0.1 table GRE
+ExecStop=ip rule del from 10.69.1.0/24 table GRE
+ExecStop=ip rule del from 10.69.2.0/24 table GRE
+ExecStop=ip rule del from 10.69.3.0/24 table GRE
+ExecStop=ip rule del from 10.69.4.0/24 table GRE
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
+systemctl daemon-reload
+systemctl enable --now gre-tunnel
+systemctl start gre-tunnel
 function Selection(){
 	Passwd
 	choice=0
