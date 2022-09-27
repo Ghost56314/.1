@@ -3425,7 +3425,7 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                           \e[0m \e[0;35m V2.2 \e[0m "
+                                                                                           \e[0m \e[0;35m V2.3 \e[0m "
 	echo
 	echo
 	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
