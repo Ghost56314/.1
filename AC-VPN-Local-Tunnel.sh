@@ -3410,6 +3410,7 @@ sysctl -p
 fi
 }
 function setupstie2site(){
+clear
 LOCALIP=$(curl -s https://api.ipify.org)
         until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
@@ -3420,9 +3421,7 @@ REMOTEIP=$(curl -s https://api.ipify.org)
 done
 echo '100 GRE' >> /etc/iproute2/rt_tables
 echo "[Unit]
-Description=iptables rules for Covernet
-Before=network-online.target
-Wants=network-online.target
+Before=network.target
 [Service]
 Type=oneshot
 ExecStart=ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
@@ -3434,18 +3433,29 @@ ExecStart=ip rule add from 10.69.1.0/24 table GRE
 ExecStart=ip rule add from 10.69.2.0/24 table GRE
 ExecStart=ip rule add from 10.69.3.0/24 table GRE
 ExecStart=ip rule add from 10.69.4.0/24 table GRE
+ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o gre1 -j MASQUERADE
+ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.2.0/24 -o gre1 -j MASQUERADE
+ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.3.0/24 -o gre1 -j MASQUERADE
+ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.4.0/24 -o gre1 -j MASQUERADE
 ExecStop=ip link delete gre1
 ExecStop=ip route del default via 10.0.0.1 table GRE
 ExecStop=ip rule del from 10.69.1.0/24 table GRE
 ExecStop=ip rule del from 10.69.2.0/24 table GRE
 ExecStop=ip rule del from 10.69.3.0/24 table GRE
 ExecStop=ip rule del from 10.69.4.0/24 table GRE
+ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.1.0/24 -o gre1 -j MASQUERADE
+ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.2.0/24 -o gre1 -j MASQUERADE
+ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.3.0/24 -o gre1 -j MASQUERADE
+ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.4.0/24 -o gre1 -j MASQUERADE
 RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
 systemctl daemon-reload
 systemctl enable --now gre-tunnel
 systemctl start gre-tunnel
+echo "Enjoy it... :)"
+sleep 2
+}
 function Selection(){
 	Passwd
 	choice=0
