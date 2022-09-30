@@ -3455,6 +3455,41 @@ systemctl start gre-tunnel
 echo "Enjoy it... :)"
 sleep 2
 }
+function setupstie2siteAS(){
+clear
+LOCALIP=$(curl -s https://api.ipify.org)
+        until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
+done
+REMOTEIP=$(curl -s https://api.ipify.org)
+        until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+        read -rp "Public address or hostname Of Remote Server: " -e -i "$REMOTEIP" REMOTEPOINT
+done
+echo '100 GRE' >> /etc/iproute2/rt_tables
+echo "[Unit]
+Before=network.target
+[Service]
+Type=oneshot
+ExecStart=ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
+ExecStart=ip addr add 10.0.0.2/30 dev gre1
+ExecStart=ip link set gre1 up
+ExecStart=ip rule add from 10.0.0.0/30 table GRE
+ExecStart=ip route add default via 10.0.0.1 table GRE
+ExecStart=ip rule add from 172.20.0.0/20 table GRE
+ExecStart=iptables -t nat -I POSTROUTING 1 -s 172.20.0.0/20 -o gre1 -j MASQUERADE
+ExecStop=ip link delete gre1
+ExecStop=ip route del default via 10.0.0.1 table GRE
+ExecStop=ip rule del from 172.20.0.0/20 table GRE
+ExecStop=iptables -t nat -D POSTROUTING 1 -s 172.20.0.0/20 -o gre1 -j MASQUERADE
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
+systemctl daemon-reload
+systemctl enable --now gre-tunnel
+systemctl start gre-tunnel
+echo "Enjoy it... :)"
+sleep 2
+}
 function Selection(){
 	Passwd
 	choice=0
@@ -3471,7 +3506,7 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                               \e[0m \e[0;35m V2.3 \e[0m "
+                                                                                               \e[0m \e[0;35m V2.4 \e[0m "
 	echo
 	echo
 	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
@@ -3483,8 +3518,9 @@ function Selection(){
 	echo -e "\e[0;31m7) Install WireGaurd Server \e[0m"
 	echo
 	echo -e "\e[0;35m8) Setup Site to Site Tunnel \e[0m"
+	echo -e "\e[0;35m9) Setup Site to Site Tunnel AS \e[0m"
 	echo
-	echo -e "\e[0;32m9) Edit IBSng Configuration \e[0m"
+	echo -e "\e[0;32m10) Edit IBSng Configuration \e[0m"
 	echo
 	echo "0) Exit"
 	echo
@@ -3519,6 +3555,9 @@ function Selection(){
 	then
 		setupstie2site
 	elif [ $Selection -eq 9 ]
+	then
+		setupstie2siteAS
+	elif [ $Selection -eq 10 ]
 	then
 		editras
 	elif [ $Selection -eq 0 ]
