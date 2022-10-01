@@ -3461,9 +3461,8 @@ LOCALIP=$(curl -s https://api.ipify.org)
         until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
 done
-REMOTEIP=$(curl -s https://api.ipify.org)
         until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public address or hostname Of Remote Server: " -e -i "$REMOTEIP" REMOTEPOINT
+        read -rp "Public address or hostname Of Remote Server: " -e REMOTEPOINT
 done
 echo '100 GRE' >> /etc/iproute2/rt_tables
 echo "[Unit]
