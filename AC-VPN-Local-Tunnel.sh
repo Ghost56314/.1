@@ -3373,6 +3373,17 @@ else
 	esac
 fi
 }
+function installopenvpnas(){
+clear
+wget https://download.soc1.ir/as/openvpn-as-bundled-clients_25_all.deb -O /tmp/openvpn-as-bundled-clients_25_all.deb
+wget https://download.soc1.ir/as/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -O /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb
+wget https://download.soc1.ir/as/pyovpn-2.0-py3.8.egg -O /tmp/pyovpn-2.0-py3.8.egg
+apt-get install mysql-client libmysqlclient-dev -y
+apt install /tmp/openvpn-as-bundled-clients_25_all.deb -y
+apt install /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -y
+/tmp/pyovpn-2.0-py3.8.egg /usr/local/openvpn_as/lib/python/ 
+/usr/local/openvpn_as/bin/ovpn-init
+}
 function iptablesserv(){
 add-iptable-rules=/etc/iptables/add-iptable-rules.sh
 if test -f "$add-iptable-rules"; then
@@ -3505,14 +3516,14 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                               \e[0m \e[0;35m V2.4 \e[0m "
+                                                                                               \e[0m \e[0;35m V2.5 \e[0m "
 	echo
 	echo
 	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
 	echo -e "\e[0;33m2) Install Cisco Any Connect Server With IBSng Config \e[0m"
 	echo -e "\e[0;31m3) Install L2TP Server With IBSng Config \e[0m"
 	echo -e "\e[0;33m4) Install PPTP Server With IBSng Config \e[0m"
-	echo -e "\e[0;31m5) Install IKEv2 Server With IBSng Config \e[0m"
+	echo -e "\e[0;31m5) Install OpenVPNAS\e[0m"
 	echo -e "\e[0;33m6) Install ShadowSocks Server \e[0m"
 	echo -e "\e[0;31m7) Install WireGaurd Server \e[0m"
 	echo
@@ -3543,7 +3554,7 @@ function Selection(){
 		installpptp
 	elif [ $Selection -eq 5 ]
 	then
-		installikev2
+		installopenvpnas
 	elif [ $Selection -eq 6 ]
 	then
 		installsocks5
