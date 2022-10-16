@@ -65,7 +65,7 @@ RemainAfterExit=yes
 WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
 systemctl daemon-reload
 systemctl enable --now gre-tunnel
-systemctl start gre-tunnel
+systemctl restart gre-tunnel
 sed -i '/.*net.ipv4.ip.*/s/^#//g' /etc/sysctl.conf
 sysctl -p
 }
