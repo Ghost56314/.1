@@ -3376,9 +3376,9 @@ fi
 function installopenvpnas(){
 preinst
 clear
-wget https://download.soc1.ir/as/openvpn-as-bundled-clients_25_all.deb -O /tmp/openvpn-as-bundled-clients_25_all.deb
-wget https://download.soc1.ir/as/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -O /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb
-wget https://download.soc1.ir/as/pyovpn-2.0-py3.8.egg -O /tmp/pyovpn-2.0-py3.8.egg
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/openvpn-as-bundled-clients_25_all.deb -O /tmp/openvpn-as-bundled-clients_25_all.deb
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -O /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/pyovpn-2.0-py3.8.egg -O /tmp/pyovpn-2.0-py3.8.egg
 apt-get install mysql-client libmysqlclient-dev -y
 apt install /tmp/openvpn-as-bundled-clients_25_all.deb -y
 apt install /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -y
