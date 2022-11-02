@@ -3505,12 +3505,12 @@ echo '100 GRE' >> /etc/iproute2/rt_tables
 ip rule add from 10.0.0.0/30 table GRE
 ip rule add from 172.20.0.0/20 table GRE
 ip route add default via 10.0.0.1 table GRE
-iptables -t nat -I POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 172.0.0.0/20 -o tun0 -j MASQUERADE
 EOF
 cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
 #!/bin/bash
 pkill -9 anytun
-iptables -t nat -D POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
+iptables -t nat -D POSTROUTING 1 -s 172.0.0.0/20 -o tun0 -j MASQUERADE
 EOF
 systemctl restart covernet-tunnel
 echo "Enjoy it... :)"
