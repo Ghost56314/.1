@@ -3469,35 +3469,39 @@ sleep 2
 }
 function setupstie2siteAS(){
 clear
-LOCALIP=$(curl -s https://api.ipify.org)
-        until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
-done
-        until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public address or hostname Of Remote Server: " -e REMOTEPOINT
-done
-echo '100 GRE' >> /etc/iproute2/rt_tables
+mkdir -p /etc/tunnel
+touch /etc/tunnel/start-covernet-tunnel.sh
+touch /etc/tunnel/stop-covernet-tunnel.sh
+chmod +x /etc/tunnel/start-covernet-tunnel.sh
+chmod +x /etc/tunnel/stop-covernet-tunnel.sh
 echo "[Unit]
 Before=network.target
 [Service]
 Type=oneshot
-ExecStart=ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
-ExecStart=ip addr add 10.0.0.2/30 dev gre1
-ExecStart=ip link set gre1 up
-ExecStart=ip rule add from 10.0.0.0/30 table GRE
-ExecStart=ip route add default via 10.0.0.1 table GRE
-ExecStart=ip rule add from 172.20.0.0/20 table GRE
-ExecStart=iptables -t nat -I POSTROUTING 1 -s 172.20.0.0/20 -o gre1 -j MASQUERADE
-ExecStop=ip link delete gre1
-ExecStop=ip route del default via 10.0.0.1 table GRE
-ExecStop=ip rule del from 172.20.0.0/20 table GRE
-ExecStop=iptables -t nat -D POSTROUTING 1 -s 172.20.0.0/20 -o gre1 -j MASQUERADE
 RemainAfterExit=yes
 [Install]
-WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
+WantedBy=multi-user.target" >/etc/systemd/system/covernet-tunnel.service
+chmod +x /etc/systemd/system/covernet-tunnel.service
 systemctl daemon-reload
-systemctl enable --now gre-tunnel
-systemctl start gre-tunnel
+systemctl enable --now covernet-tunnel
+until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+LOCALIP=$(curl -s https://api.ipify.org)
+until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
+read -rp "Public address or hostname Of Remote Server: " -e REMOTEPOINT
+cat > /etc/tunnel/start-covernet-tunnel.sh <<EOF
+anytun -r $REMOTEPOINT -t tun -n 10.0.0.2/30 -c aes-ctr-256 -k aes-ctr-256 -E covernet -e left
+echo '100 GRE' >> /etc/iproute2/rt_tables
+ip rule add from 10.0.0.0/30 table GRE
+ip rule add from 172.20.0.0/20 table GRE
+ip route add default via 10.0.0.1 table GRE
+iptables -t nat -I POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
+EOF
+cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
+pkill -9 anytun
+iptables -t nat -D POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
+EOF
+systemctl restart covernet-tunnel
 echo "Enjoy it... :)"
 sleep 2
 }
