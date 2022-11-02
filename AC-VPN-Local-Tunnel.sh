@@ -3383,7 +3383,7 @@ apt-get install mysql-client libmysqlclient-dev -y
 apt install /tmp/openvpn-as-bundled-clients_25_all.deb -y
 apt install /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -y
 mv /tmp/pyovpn-2.0-py3.8.egg /usr/local/openvpn_as/lib/python/ 
-/usr/local/openvpn_as/bin/ovpn-init
+/usr/local/openvpn_as/bin/ovpn-init --force
 }
 function iptablesserv(){
 add-iptable-rules=/etc/iptables/add-iptable-rules.sh
