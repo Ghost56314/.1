@@ -72,14 +72,14 @@ done
 cat > /etc/tunnel/start-covernet-tunnel.sh <<EOF
 #!/bin/bash
 anytun -r $REMOTEPOINT -t tun -n 10.0.0.1/30 -c aes-ctr-256 -k aes-ctr-256 -E covernet -e right
-iptables -t nat -A POSTROUTING -s 192.168.123.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
-iptables -t nat -A POSTROUTING -s 172.27.224.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 172.20.0.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 EOF
 cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
 #!/bin/bash
 pkill -9 anytun
-iptables -t nat -D POSTROUTING -s 192.168.123.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
-iptables -t nat -D POSTROUTING -s 172.27.224.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 10.0.0.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 172.20.0.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 EOF
 systemctl restart covernet-tunnel
 echo "Enjoy it... :)"
