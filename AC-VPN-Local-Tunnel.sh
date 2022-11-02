@@ -3468,28 +3468,38 @@ echo "Enjoy it... :)"
 sleep 2
 }
 function setupstie2siteAS(){
+#!/bin/bash
 clear
+apt install anytun -y
 mkdir -p /etc/tunnel
 touch /etc/tunnel/start-covernet-tunnel.sh
 touch /etc/tunnel/stop-covernet-tunnel.sh
 chmod +x /etc/tunnel/start-covernet-tunnel.sh
 chmod +x /etc/tunnel/stop-covernet-tunnel.sh
 echo "[Unit]
-Before=network.target
+After=network.target
+StartLimitIntervalSec=0
 [Service]
-Type=oneshot
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/etc/tunnel/start-covernet-tunnel.sh
+ExecStop=/etc/tunnel/stop-covernet-tunnel.sh
 RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target" >/etc/systemd/system/covernet-tunnel.service
 chmod +x /etc/systemd/system/covernet-tunnel.service
 systemctl daemon-reload
 systemctl enable --now covernet-tunnel
-until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-LOCALIP=$(curl -s https://api.ipify.org)
+LOCALIP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
 read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
-read -rp "Public address or hostname Of Remote Server: " -e REMOTEPOINT
+done
+until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+read -rp "Public address or hostname of Remote Server: " -e REMOTEPOINT
+done
 cat > /etc/tunnel/start-covernet-tunnel.sh <<EOF
+#!/bin/bash
 anytun -r $REMOTEPOINT -t tun -n 10.0.0.2/30 -c aes-ctr-256 -k aes-ctr-256 -E covernet -e left
 echo '100 GRE' >> /etc/iproute2/rt_tables
 ip rule add from 10.0.0.0/30 table GRE
@@ -3498,6 +3508,7 @@ ip route add default via 10.0.0.1 table GRE
 iptables -t nat -I POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
 EOF
 cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
+#!/bin/bash
 pkill -9 anytun
 iptables -t nat -D POSTROUTING 1 -s 172.27.0.0/20 -o tun0 -j MASQUERADE
 EOF
@@ -3521,7 +3532,7 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                               \e[0m \e[0;35m V2.5 \e[0m "
+                                                                                               \e[0m \e[0;35m V2.6.1 \e[0m "
 	echo
 	echo
 	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
