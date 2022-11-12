@@ -807,7 +807,7 @@ function editras(){
 	}
 function preinst(){
 ufw disable
-apt update && apt dist-upgrade -y && apt autoremove -y
+apt purge multipath-tools -y ; apt update && apt dist-upgrade -y && apt autoremove -y
 }
 function installocs(){
 preinst
@@ -815,8 +815,7 @@ echo installing...
 apt update -qq ; apt install ocserv certbot -y
 clear
 read -rp "Please Enter Domain For ocserv SSL: " ocdomain
-read -rp "Please Enter Email For ocserv SSL: " ocmail
-certbot certonly --standalone --preferred-challenges http --agree-tos --email $ocmail -d $ocdomain
+certbot certonly --standalone --preferred-challenges http --agree-tos --email info@cserver.site -d $ocdomain
 sed -i -r '/^auth = "pam\[.*/s/^/#/g' /etc/ocserv/ocserv.conf #comment
 sed -i -r '/.*auth = "radius\[.*/s/^#//g' /etc/ocserv/ocserv.conf #uncomment
 sed -i -r '/^route = .*/s/^/#/g' /etc/ocserv/ocserv.conf  #comment
@@ -3375,15 +3374,50 @@ fi
 }
 function installopenvpnas(){
 preinst
-clear
-wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/openvpn-as-bundled-clients_25_all.deb -O /tmp/openvpn-as-bundled-clients_25_all.deb
-wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -O /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb
-wget --no-check-certificate --user=covernet --password=u1rGiEkhAN https://akhvash.ir/as/pyovpn-2.0-py3.8.egg -O /tmp/pyovpn-2.0-py3.8.egg
+clear   
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN http://radius.cserver.site/as/openvpn-as-bundled-clients.deb -O /tmp/openvpn-as-bundled-clients.deb
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN http://radius.cserver.site/as/openvpn-as.deb -O /tmp/openvpn-as.deb
+wget --no-check-certificate --user=covernet --password=u1rGiEkhAN http://radius.cserver.site/as/pyovpn-2.0-py3.8.egg -O /tmp/pyovpn-2.0-py3.8.egg
 apt-get install mysql-client libmysqlclient-dev -y
-apt install /tmp/openvpn-as-bundled-clients_25_all.deb -y
-apt install /tmp/openvpn-as_2.11.0-794ab41d-Ubuntu20_amd64.deb -y
+apt install /tmp/openvpn-as-bundled-clients.deb -y
+apt install /tmp/openvpn-as.deb -y
 mv /tmp/pyovpn-2.0-py3.8.egg /usr/local/openvpn_as/lib/python/ 
 /usr/local/openvpn_as/bin/ovpn-init --force
+}
+function joincluster(){
+read -rp "Enter DB Port: " -e -i "33" DBPort
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.daemon.udp.port" --value 94 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.daemon.0.client.network" --value 172.20.0.0 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.group_pool.0" --value none Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.client.routing.reroute_dns" --value custom Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.dhcp_option.dns.0" --value 8.8.8.8 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.dhcp_option.dns.1" --value 1.1.1.1 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.routing.private_access" --value no Configput
+/usr/local/openvpn_as/scripts/sacli  --key "sa.session_expire" --value "86400" ConfigPut
+/usr/local/openvpn_as/scripts/sacli --mysql_str='mysql://oasuser:MpV912#Tj%pD!sxB@oasdb.cserver.site:$DBPort' clusterjoin
+}
+function createcluster(){
+read -rp "Enter DB Port: " -e -i "33" DBPort
+read -rp "Enter Cluster URL: " -e -i "" CLUSTERURL
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.daemon.udp.port" --value 94 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.daemon.0.client.network" --value 172.20.0.0 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.group_pool.0" --value none Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.client.routing.reroute_dns" --value custom Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.dhcp_option.dns.0" --value 8.8.8.8 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.dhcp_option.dns.1" --value 1.1.1.1 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "vpn.server.routing.private_access" --value no Configput
+/usr/local/openvpn_as/scripts/sacli  --key "sa.session_expire" --value "86400" ConfigPut
+/usr/local/openvpn_as/scripts/sacli  --key "auth.module.type" --value radius Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.pam.0.service" --value openvpnas Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.acct_enable" --value true Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.auth_method" --value mschap2 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.case_sensitive" --value false Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.enable" --value true Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.server.0.acct_port" --value 1813 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.server.0.auth_port" --value 1812 Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.server.0.host" --value radius.cserver.site Configput
+/usr/local/openvpn_as/scripts/sacli  --key "auth.radius.0.server.0.secret" --value covernet Configput
+/usr/local/openvpn_as/scripts/sacli --convert_db --prof=Default --mysql_str='mysql://oasuser:MpV912#Tj%pD!sxB@oasdb.cserver.site:3349' --key "rr_dns_hostname" --value $CLUSTERURL --key "rr_dns_new_nodes" --value true ClusterNew
 }
 function iptablesserv(){
 add-iptable-rules=/etc/iptables/add-iptable-rules.sh
@@ -3422,54 +3456,6 @@ fi
 }
 function setupstie2site(){
 clear
-LOCALIP=$(curl -s https://api.ipify.org)
-        until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
-done
-REMOTEIP=$(curl -s https://api.ipify.org)
-        until [[ $REMOTEPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-        read -rp "Public address or hostname Of Remote Server: " -e -i "$REMOTEIP" REMOTEPOINT
-done
-echo '100 GRE' >> /etc/iproute2/rt_tables
-echo "[Unit]
-Before=network.target
-[Service]
-Type=oneshot
-ExecStart=ip tunnel add gre1 mode gre local $LOCALPOINT remote $REMOTEPOINT ttl 255
-ExecStart=ip addr add 10.0.0.2/30 dev gre1
-ExecStart=ip link set gre1 up
-ExecStart=ip rule add from 10.0.0.0/30 table GRE
-ExecStart=ip route add default via 10.0.0.1 table GRE
-ExecStart=ip rule add from 10.69.1.0/24 table GRE
-ExecStart=ip rule add from 10.69.2.0/24 table GRE
-ExecStart=ip rule add from 10.69.3.0/24 table GRE
-ExecStart=ip rule add from 10.69.4.0/24 table GRE
-ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o gre1 -j MASQUERADE
-ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.2.0/24 -o gre1 -j MASQUERADE
-ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.3.0/24 -o gre1 -j MASQUERADE
-ExecStart=iptables -t nat -I POSTROUTING 1 -s 10.69.4.0/24 -o gre1 -j MASQUERADE
-ExecStop=ip link delete gre1
-ExecStop=ip route del default via 10.0.0.1 table GRE
-ExecStop=ip rule del from 10.69.1.0/24 table GRE
-ExecStop=ip rule del from 10.69.2.0/24 table GRE
-ExecStop=ip rule del from 10.69.3.0/24 table GRE
-ExecStop=ip rule del from 10.69.4.0/24 table GRE
-ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.1.0/24 -o gre1 -j MASQUERADE
-ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.2.0/24 -o gre1 -j MASQUERADE
-ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.3.0/24 -o gre1 -j MASQUERADE
-ExecStop=iptables -t nat -D POSTROUTING 1 -s 10.69.4.0/24 -o gre1 -j MASQUERADE
-RemainAfterExit=yes
-[Install]
-WantedBy=multi-user.target" >/etc/systemd/system/gre-tunnel.service
-systemctl daemon-reload
-systemctl enable --now gre-tunnel
-systemctl start gre-tunnel
-echo "Enjoy it... :)"
-sleep 2
-}
-function setupstie2siteAS(){
-#!/bin/bash
-clear
 apt install anytun -y
 mkdir -p /etc/tunnel
 touch /etc/tunnel/start-covernet-tunnel.sh
@@ -3488,7 +3474,6 @@ ExecStop=/etc/tunnel/stop-covernet-tunnel.sh
 RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target" >/etc/systemd/system/covernet-tunnel.service
-chmod +x /etc/systemd/system/covernet-tunnel.service
 systemctl daemon-reload
 systemctl enable --now covernet-tunnel
 LOCALIP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
@@ -3501,20 +3486,47 @@ done
 cat > /etc/tunnel/start-covernet-tunnel.sh <<EOF
 #!/bin/bash
 anytun -r $REMOTEPOINT -t tun -n 10.0.0.2/30 -c aes-ctr-256 -k aes-ctr-256 -E covernet -e left
-echo '100 GRE' >> /etc/iproute2/rt_tables
-ip rule add from 10.0.0.0/30 table GRE
-ip rule add from 172.20.0.0/20 table GRE
-ip route add default via 10.0.0.1 table GRE
+echo '100 TUNNEL' >> /etc/iproute2/rt_tables
+ip rule add from 10.0.0.0/30 table TUNNEL
+ip rule add from 172.20.0.0/20 table TUNNEL
+ip rule add from 10.69.1.0/24 table TUNNEL
+ip rule add from 10.69.2.0/24 table TUNNEL
+ip rule add from 10.69.3.0/24 table TUNNEL
+ip rule add from 10.69.4.0/24 table TUNNEL
+ip route add default via 10.0.0.1 table TUNNEL
 iptables -t nat -I POSTROUTING 1 -s 172.0.0.0/20 -o tun0 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 10.69.1.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 10.69.2.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 10.69.3.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -I POSTROUTING 1 -s 10.69.4.0/24 -o tun0 -j MASQUERADE
 EOF
 cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
 #!/bin/bash
 pkill -9 anytun
 iptables -t nat -D POSTROUTING 1 -s 172.0.0.0/20 -o tun0 -j MASQUERADE
+iptables -t nat -D POSTROUTING 1 -s 10.69.1.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -D POSTROUTING 1 -s 10.69.2.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -D POSTROUTING 1 -s 10.69.3.0/24 -o tun0 -j MASQUERADE
+iptables -t nat -D POSTROUTING 1 -s 10.69.4.0/24 -o tun0 -j MASQUERADE
 EOF
 systemctl restart covernet-tunnel
 echo "Enjoy it... :)"
 sleep 2
+}
+function fakeupload(){
+clear
+read -rp "Enter Upload URL or IP: "  UPIP
+until [[ $UPSSH =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
+read -rp "Enter Upload SSH Port: " -e -i "22" UPSSH
+done
+mkdir -p /etc/tunnel
+dd if=/dev/urandom of=/root/fake bs=2G count=1
+touch /etc/tunnel/fake-upload.sh
+chmod +x /etc/tunnel/fake-upload.sh
+(crontab -l; echo "* * * * * /etc/tunnel/fake-upload.sh") | sort -u | crontab -
+cat > /etc/tunnel/fake-upload.sh << EOF
+scp -P $UPSSH -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /root/fake $UPIP:/dev/null
+EOF
 }
 function Selection(){
 	Passwd
@@ -3532,21 +3544,23 @@ function Selection(){
 ██      ██    ██  ██  ██  ██      ██   ██ ██  ██ ██ ██         ██         ██  ██  ██      ██  ██ ██ 
  ██████  ██████    ████   ███████ ██   ██ ██   ████ ███████    ██          ████   ██      ██   ████ 
                                                                                                     
-                                                                                               \e[0m \e[0;35m V2.6.1 \e[0m "
+                                                                                               \e[0m \e[0;35m V2.6.2 \e[0m "
 	echo
 	echo
-	echo -e "\e[0;31m1) Install OpenVPN Server With IBSng Config \e[0m"
-	echo -e "\e[0;33m2) Install Cisco Any Connect Server With IBSng Config \e[0m"
-	echo -e "\e[0;31m3) Install L2TP Server With IBSng Config \e[0m"
-	echo -e "\e[0;33m4) Install PPTP Server With IBSng Config \e[0m"
+	echo -e "\e[0;31m1) Install OpenVPN Server With Radius Config \e[0m"
+	echo -e "\e[0;33m2) Install Cisco Any Connect Server With Radius Config \e[0m"
+	echo -e "\e[0;31m3) Install L2TP Server With Radius Config \e[0m"
+	echo -e "\e[0;33m4) Install PPTP Server With Radius Config \e[0m"
 	echo -e "\e[0;31m5) Install OpenVPNAS\e[0m"
 	echo -e "\e[0;33m6) Install ShadowSocks Server \e[0m"
 	echo -e "\e[0;31m7) Install WireGaurd Server \e[0m"
 	echo
 	echo -e "\e[0;35m8) Setup Site to Site Tunnel \e[0m"
-	echo -e "\e[0;35m9) Setup Site to Site Tunnel AS \e[0m"
+	echo -e "\e[0;35m9) Join Cluster AS \e[0m"
+	echo -e "\e[0;35m10) Create Cluster AS \e[0m"
+	echo -e "\e[0;35m11) Setup Fake Upload \e[0m"
 	echo
-	echo -e "\e[0;32m10) Edit IBSng Configuration \e[0m"
+	echo -e "\e[0;32m12) Edit Radius Configuration \e[0m"
 	echo
 	echo "0) Exit"
 	echo
@@ -3582,8 +3596,14 @@ function Selection(){
 		setupstie2site
 	elif [ $Selection -eq 9 ]
 	then
-		setupstie2siteAS
+		joincluster
 	elif [ $Selection -eq 10 ]
+	then
+		createcluster
+	elif [ $Selection -eq 11 ]
+	then
+		setupfakeupload
+	elif [ $Selection -eq 12 ]
 	then
 		editras
 	elif [ $Selection -eq 0 ]
