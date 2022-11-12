@@ -1,5 +1,6 @@
 #!/bin/bash
 function Site2Site(){
+clear
 LOCALIP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
         until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
         read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
@@ -62,6 +63,7 @@ WantedBy=multi-user.target" >/etc/systemd/system/covernet-tunnel.service
 chmod +x /etc/systemd/system/covernet-tunnel.service
 systemctl daemon-reload
 systemctl enable --now covernet-tunnel
+clear
 LOCALIP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 until [[ $LOCALPOINT =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
 read -rp "Public address or hostname Of This Server: " -e -i "$LOCALIP" LOCALPOINT
@@ -74,12 +76,20 @@ cat > /etc/tunnel/start-covernet-tunnel.sh <<EOF
 anytun -r $REMOTEPOINT -t tun -n 10.0.0.1/30 -c aes-ctr-256 -k aes-ctr-256 -E covernet -e right
 iptables -t nat -A POSTROUTING -s 10.0.0.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 iptables -t nat -A POSTROUTING -s 172.20.0.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 10.69.1.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 10.69.2.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 10.69.3.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -A POSTROUTING -s 10.69.4.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 EOF
 cat > /etc/tunnel/stop-covernet-tunnel.sh <<EOF
 #!/bin/bash
 pkill -9 anytun
 iptables -t nat -D POSTROUTING -s 10.0.0.0/30 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 iptables -t nat -D POSTROUTING -s 172.20.0.0/20 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 10.69.1.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 10.69.2.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 10.69.3.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
+iptables -t nat -D POSTROUTING -s 10.69.4.0/24 ! -o tun+ -j SNAT --to-source $LOCALPOINT
 EOF
 systemctl restart covernet-tunnel
 echo "Enjoy it... :)"
